@@ -3,7 +3,7 @@
  **Name**      :	Matrix.h  
  **Author**    :	Jaime Feller  
  **Version**     :	1.0  
- **Copyright**   : 	Your copyright notice  
+ **Copyright**   :	GNU GENERAL PUBLIC LICENSE  
  **Description** :	based in https://www.codeproject.com/Articles/5283245/Matrix-Library-in-C  
      - Incorporates:   	
           - error return  
