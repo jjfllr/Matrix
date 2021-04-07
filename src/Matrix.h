@@ -7,13 +7,13 @@
  Description :	based in https://www.codeproject.com/Articles/5283245/Matrix-Library-in-C
  	 	 	 	Incorporates 	- error return
  	 	 	 	 	 	 	 	- Checks in Operations
- 	 	 	 	 	 	 	 	- Matrixes zero indexed (as oposed to the original)
+ 	 	 	 	 	 	 	 	- Matrixes zero indexed (as opposed to the original)
  	 	 	 	 	 	 	 	- Recursive algorithm to multiply matrices of any order
  	 	 	 	 	 	 	 	- Reduced Row Echelon form
  	 	 	 	 	 	 	 	- Inverse of any triangular Matrix (original only upper triangular)
-
+ 	 	 	 	 	 	 	 	- Dot product and Magnitude for vectors
+								- Gram-Schmidt Orthonormalization for matrixes
 To do		: 	Pthread Matix multiplication
-				QR descomposition
 				EigenValues
 				EigenVectors
 
@@ -30,13 +30,6 @@ To do		: 	Pthread Matix multiplication
 		double* numbers;
 	} Matrix_t;
 
-/*
-	typedef struct matrix_list_t{
-		struct matrix_list_t* Next;
-		Matrix_t* Matrix;
-	} Matrix_List_t;
-*/
-
 	//Constructor
 	Matrix_t* Matrix_new(unsigned int row, unsigned int col, double val); /* Allocates new matrix of row x col dimensions, filled with val */
 	Matrix_t* Matrix_identity(unsigned int n); /* Allocates new Identity matrix of dimension n x n*/
@@ -44,7 +37,7 @@ To do		: 	Pthread Matix multiplication
 	Matrix_t* Matrix_ones(unsigned int row, unsigned int col); /* Allocates new matrix of dimensions row * col, filled with ones */
 	Matrix_t* Matrix_random(unsigned int row, unsigned int col, double from, double to); /* Allocates new matrix of dimensions row * col, filled with values between lower and upper inclusives */
 	Matrix_t* Matrix_random_int(unsigned int row, unsigned int col, int lower, int upper); /* Allocates new matrix of dimensions row * col, filled with values between lower and upper inclusives */
-	//destructor
+	//De-constructor
 	void Matrix_free(Matrix_t* In); /* free allocation of matrix M */
 	//Getter
 	int Matrix_get(Matrix_t* In, unsigned int row, unsigned int col, double* out); /* Get value of element in row row and column col, cero indexed*/
@@ -56,6 +49,10 @@ To do		: 	Pthread Matix multiplication
 	int Matrix_subtraction(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out); /* Performs Matrix subtraction, Out = In_1 - In_2 */
 	int Matrix_multiplication(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out); /*Performs Matrix multiplication, Out = In_1 * In_2 */
 	int Matrix_multiplication_recursive(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out); /*Recursive algorithm for multiplying matrixes*/
+
+	//vectors
+	int Matrix_dotProduct(Matrix_t* In_1, Matrix_t* In_2, double* out); /* Calculates the dot product between vectors In_1 and In_2; <In_1, In_2> */
+	int Matrix_magnitude(Matrix_t* In_1, double* out); /* Calculates the Magnitude of vector In_1; sqrt(<In,In>) */
 
 	// Utilities
 	void Matrix_display(Matrix_t* In); /* Prints the Matrix M in the console */
@@ -87,19 +84,12 @@ To do		: 	Pthread Matix multiplication
 
 	int Matrix_compare(Matrix_t* In_1, Matrix_t* In_2); /*returns 0 if norm(In1) == norm(In2), <0 if norm(In1) < norm(In2), >0 if norm(In1) > norm(In2) */
 
+	int Matrix_orthonormalization(Matrix_t* In, Matrix_t* Out); /* Gram-Schmidt orthogonalization process to Matrix In */
 	int Matrix_descomposition_LU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_U); /* Calculates the LU descomposition of the Matrix */
 	int Matrix_descomposition_LDU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_D, Matrix_t* Out_U); /* Calculates the LDU descomposition of the Matrix */
 	int Matrix_descomposition_QR(Matrix_t* In, Matrix_t* Out_Q, Matrix_t* Out_R); /* TODO: Calculates the QR descomposition of the Matrix */
 
 	int Matrix_setMatrixtoZero(Matrix_t* In); /* Sets all the values of the Matrix to zero.*/
-
-	//MUST CHECK MANUALLY DIMENSIONS, TRY NOT TO USE
-	Matrix_t* Matrix_submatrix_2(Matrix_t* In, unsigned int upper, unsigned int lower, unsigned int left, unsigned int right); /* generates a new subMatrix of In between Columns Left and Right, and between rows Upper and Lower */
-	Matrix_t* Matrix_hConcat_2(Matrix_t* In_1, Matrix_t* In_2); /* Concatenates the matrix In_2 to In_1 horizontally */
-	Matrix_t* Matrix_vConcat_2(Matrix_t* In_1, Matrix_t* In_2); /* Concatenates the matrix In_2 to In_1 vertically */
-	Matrix_t* Matrix_removeRow_2(Matrix_t* In, unsigned int row); /* Removes Row row of the matrix */
-	Matrix_t* Matrix_removeColumn_2(Matrix_t* In, unsigned int col); /* Removes column col of the matrix */
-	Matrix_t* Matrix_transpose_2(Matrix_t* In); /* Transposes In Matrix */
 
 	//forked operations
 #ifdef __PARALLEL__
@@ -117,6 +107,7 @@ To do		: 	Pthread Matix multiplication
 #define MATRIX_TRIANGULAR_UPPER	0b000000000000000000010000
 #define MATRIX_TRIANGULAR_LOWER	0b000000000000000000100000
 #define MATRIX_TRIANGULAR		0b000000000000000001000000
+#define MATRIX_VECTOR			0b000000000000000010000000
 
 #define MATRIX_DIFFERENT	 	0b001000000000000000000000
 #define MATRIX_SAME				0b010000000000000000000000

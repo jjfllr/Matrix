@@ -82,6 +82,93 @@ static int Matrix_Internal_checkDiagonal(Matrix_t* In){
 }
 */
 
+//Internal use just because they don't check conditions
+/*
+static Matrix_t* Matrix_hConcat_2(Matrix_t* In_1, Matrix_t* In_2){
+	Matrix_t* Out = Matrix_new(In_1->row, In_1->col + In_2->col, 0);
+	int k = 0;
+	for(int i = 0; i < In_1->row; ++i){
+		for(int j = 0; j < In_1->col; ++j){
+			Out->numbers[k++] = In_1->numbers[i*In_1->col+j];
+		}
+		for(int j = 0; j < In_2->row; ++j){
+			Out->numbers[k++] = In_2->numbers[i*In_2->col+j];
+		}
+	}
+	return Out;
+}
+*/
+static Matrix_t* Matrix_vConcat_2(Matrix_t* In_1, Matrix_t* In_2){
+	Matrix_t* Out = Matrix_new(In_1->row + In_2->row, In_1->col, 0);
+	int k = 0;
+	for(int i = 0; i < In_1->row; ++i){
+		for(int j = 0; j < In_1->col; ++j){
+			Out->numbers[k++] = In_1->numbers[i*In_1->col+j];
+		}
+	}
+	for(int i = 0; i < In_2->row; ++i){
+		for(int j = 0; j < In_2->row; ++j){
+			Out->numbers[k++] = In_2->numbers[i*In_2->col+j];
+		}
+	}
+	return Out;
+}
+
+static Matrix_t* Matrix_submatrix_2(Matrix_t* In, unsigned int upper, unsigned int lower, unsigned int left, unsigned int right){
+	if(lower < upper || right <  left || Matrix_Internal_checkIndex(In, lower, upper) != MATRIX_OK){
+		return Matrix_new(0,0,0);
+	}
+
+	Matrix_t* Out = Matrix_new(lower - upper + 1, right - left + 1, 0);
+	int k = 0;
+	for(int i = upper; i <= lower; ++i){
+		for(int j = left; j <= right; ++j){
+			Out->numbers[k++] = In->numbers[i * (In->col) + j];
+		}
+	}
+	return Out;
+}
+
+static Matrix_t* Matrix_removeRow_2(Matrix_t* In, unsigned int row){
+	Matrix_t* Out = Matrix_new(In->row-1, In->col, 0);
+	int k = 0;
+	for(int i = 0; i < In->row; ++i){
+		for(int j = 0; j < In->col; ++j){
+			if(i != row){
+				Out->numbers[k++] = In->numbers[i * In->col + j];
+			}
+		}
+	}
+	return Out;
+}
+
+/*
+static Matrix_t* Matrix_removeColumn_2(Matrix_t* In, unsigned int col){
+	Matrix_t* Out = Matrix_new(In->row-1, In->col, 0);
+	int k = 0;
+	for(int i = 0; i < In->row; ++i){
+		for(int j = 0; j < In->col; ++j){
+			if(j != col){
+				Out->numbers[k++] = In->numbers[i * In->col + j];
+			}
+		}
+	}
+	return Out;
+}
+*/
+/*
+static Matrix_t* Matrix_transpose_2(Matrix_t* In){
+	Matrix_t* Out = Matrix_new(In->col, In->row, 0);
+	int k = 0;
+	for(int i = 0; i < In->col; ++i){
+		for(int j = 0; j < In->row; ++j){
+			Out->numbers[k++] = In->numbers[j * In->row + i];
+		}
+	}
+	return Out;
+}
+*/
+
 //Constructors
 Matrix_t* Matrix_new(unsigned int row, unsigned int col, double val){
 	Matrix_t* Out = (Matrix_t *)malloc(sizeof(Matrix_t));
@@ -466,7 +553,7 @@ int Matrix_adjoint(Matrix_t* In, Matrix_t* Out){
 	return MATRIX_OK;
 }
 
-static int Matrix_internal_inverse(Matrix_t* In, Matrix_t* Out){
+static int Matrix_Internal_inverse(Matrix_t* In, Matrix_t* Out){
 	Matrix_t* B = Matrix_new(In->row, In->col, 0);
 
     Matrix_adjoint(In, B);
@@ -489,7 +576,7 @@ int Matrix_inverse(Matrix_t* In, Matrix_t* Out){
 	if(Matrix_Internal_checkAddress(In, Out) == MATRIX_SAME){
 		Matrix_t* temp = Matrix_zeroes(Out->row, Out->col);
 
-		if( Matrix_internal_inverse(In, temp) != MATRIX_OK){
+		if( Matrix_Internal_inverse(In, temp) != MATRIX_OK){
 			Matrix_free(temp);
 			return MATRIX_ERROR | MATRIX_NON_INVERTIBLE;
 		}
@@ -498,14 +585,13 @@ int Matrix_inverse(Matrix_t* In, Matrix_t* Out){
 		Matrix_free(temp);
 		return MATRIX_OK;
 	}
-	if( Matrix_internal_inverse(In, Out) != MATRIX_OK){
+	if( Matrix_Internal_inverse(In, Out) != MATRIX_OK){
 		return MATRIX_ERROR | MATRIX_NON_INVERTIBLE;
 	}
 	return MATRIX_OK;
 }
 
 static int Matrix_Internal_inverse_triangular_upper(Matrix_t* In, Matrix_t* Out){
-
 	for(int i = 0; i < Out->row; ++i){
 		//if element in diagonal is 0, then non invertible
 		if(In->numbers[i * (In->col) + i] == 0){
@@ -642,7 +728,7 @@ int Matrix_submatrix(Matrix_t* In, unsigned int upper, unsigned int lower, unsig
 	int k = 0;
 	for(int i = upper; i <= lower; ++i){
 		for(int j = left; j <= right; ++j){
-			Out->numbers[k++] = In->numbers[i * (In->col) + j];
+			Out->numbers[k++] = In->numbers[i*In->col + j ];
 		}
 	}
 	return MATRIX_OK;
@@ -911,6 +997,12 @@ int Matrix_descomposition_LU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_U){
 		return MATRIX_ERROR | MATRIX_SQUARE;
 	}
 
+	if(Matrix_Internal_checkAddress(In, Out_L) == MATRIX_SAME ||
+			Matrix_Internal_checkAddress(In, Out_U) == MATRIX_SAME ||
+			Matrix_Internal_checkAddress(Out_L, Out_U) == MATRIX_SAME){
+		return MATRIX_ERROR | MATRIX_SAME;
+	}
+
 	if(In->row == 1){
 		Out_U->numbers[0] = In->numbers[0];
 		Out_L->numbers[0] = 1;
@@ -978,7 +1070,14 @@ int Matrix_descomposition_LDU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_D, Ma
 		return MATRIX_ERROR | MATRIX_SQUARE;
 	}
 
-
+	if(Matrix_Internal_checkAddress(In, Out_L) == MATRIX_SAME ||
+			Matrix_Internal_checkAddress(In, Out_D) == MATRIX_SAME ||
+			Matrix_Internal_checkAddress(In, Out_U) == MATRIX_SAME ||
+			Matrix_Internal_checkAddress(Out_L, Out_D) == MATRIX_SAME ||
+			Matrix_Internal_checkAddress(Out_D, Out_U) == MATRIX_SAME ||
+			Matrix_Internal_checkAddress(Out_L, Out_U) == MATRIX_SAME){
+		return MATRIX_ERROR | MATRIX_SAME;
+	}
 
 	Matrix_descomposition_LU(In, Out_L, Out_U);
 	//Matrix U has the coeficients of Matrix D
@@ -994,8 +1093,112 @@ int Matrix_descomposition_LDU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_D, Ma
 	return MATRIX_OK;
 }
 
-//static double Matrix_Internal_innermultiply(Matrix_t* A, Matrix_t* B);
-//int Matrix_descomposition_QR(Matrix_t* M, Matrix_t* Q, Matrix_t* R);
+static void Matrix_Internal_orthogonalization(Matrix_t* In, Matrix_t* Out){
+
+	Matrix_t* In_col = Matrix_new(In->row, 1, 0);
+	Matrix_t* Out_col = Matrix_new(In->row, 1, 0);
+	Matrix_t* temp = Matrix_new(In->row, 1, 0);
+	//u1 = v1
+	//e1 = 1 / ||u1|| * u1
+	//u_n = v_n - sum( [<V_n, U_k>/<u_k, u_k>]*u_k )
+	//e_n = u_n / ||u_n||
+	for(int j = 0; j < In->col; ++j){
+		Matrix_submatrix(In, 0, In->row-1, j, j, In_col); // V_n
+		Matrix_submatrix(In, 0, In->row-1, j, j, temp);
+		double euclideannorm = 0;
+		for(int k = 0; k < j; ++k){
+			Matrix_submatrix(Out, 0, Out->row-1, k, k, Out_col); // U_k
+			double d1 = 0, d2 = 0;
+			Matrix_dotProduct(In_col, Out_col, &d1); // <V_n, U_k>
+			Matrix_dotProduct(Out_col, Out_col, &d2); // <U_k, U_k>
+			d2 = 1/d2;
+			for(int i = 0; i < In->row; ++i){
+				temp->numbers[i] -= d1 * d2 * Out_col->numbers[i]; // sum( [<V_n, U_k>/<u_k, u_k>]*u_k )
+			}
+		}
+		Matrix_magnitude(temp, &euclideannorm);
+		euclideannorm = 1/euclideannorm;
+
+		for(int i = 0; i < In->row; ++i){
+			Out->numbers[i*In->col + j] = temp->numbers[i] * euclideannorm;
+		}
+
+	}
+	Matrix_free(In_col);
+	Matrix_free(Out_col);
+	Matrix_free(temp);
+
+}
+
+int Matrix_orthonormalization(Matrix_t* In, Matrix_t* Out){
+	if(Matrix_Internal_checkDimensionsExact(In, Out)!= MATRIX_OK){
+		return MATRIX_ERROR | MATRIX_DIMENSIONS;
+	}
+	if(Matrix_Internal_checkAddress(In, Out) == MATRIX_SAME){
+		Matrix_t* temp = Matrix_zeroes(Out->row, Out->col);
+		Matrix_Internal_orthogonalization(In, temp);
+		Matrix_copyTo(temp, Out);
+		Matrix_free(temp);
+		return MATRIX_OK;
+	}
+	Matrix_Internal_orthogonalization(In, Out);
+	return MATRIX_OK;
+}
+
+int Matrix_descomposition_QR(Matrix_t* In, Matrix_t* Out_Q, Matrix_t* Out_R){
+	//In->row >= In->col
+	//Q is In->row x In->row;
+	//R is In->row x In->col;
+	if(In->row < In->col || Matrix_Internal_checkDimensionsExact(In, Out_Q) ||
+			Out_R->row != In->col || Out_R->col != In->col ){
+		return MATRIX_ERROR | MATRIX_DIMENSIONS;
+	}
+
+	if(Matrix_Internal_checkAddress(In, Out_Q) == MATRIX_SAME ||
+			Matrix_Internal_checkAddress(In, Out_R) == MATRIX_SAME ||
+			Matrix_Internal_checkAddress(Out_Q, Out_R) == MATRIX_SAME){
+		return MATRIX_ERROR | MATRIX_SAME;
+	}
+
+	Matrix_t* In_col = Matrix_new(In->row, 1, 0);
+	Matrix_t* Out_col = Matrix_new(In->row, 1, 0);
+	Matrix_t* temp = Matrix_new(In->row, 1, 0);
+
+	for(int j = 0; j < In->col; ++j){
+		Matrix_submatrix(In, 0, In->row-1, j, j, In_col); // V_n
+		Matrix_submatrix(In, 0, In->row-1, j, j, temp);
+		double euclideannorm = 0;
+		for(int k = 0; k < j; ++k){
+			Matrix_submatrix(Out_Q, 0, Out_Q->row-1, k, k, Out_col); // U_k
+			double d1 = 0, d2 = 0;
+			Matrix_dotProduct(In_col, Out_col, &d1); // <V_n, U_k>
+			Matrix_dotProduct(Out_col, Out_col, &d2); // <U_k, U_k>
+			d2 = 1/d2;
+			for(int i = 0; i < In->row; ++i){
+				temp->numbers[i] -= d1 * d2 * Out_col->numbers[i]; // sum( [<V_n, U_k>/<u_k, u_k>]*u_k )
+			}
+		}
+		Matrix_magnitude(temp, &euclideannorm);
+		euclideannorm = 1/euclideannorm;
+
+		for(int i = 0; i < In->row; ++i){
+			Out_Q->numbers[i*In->col + j] = temp->numbers[i] * euclideannorm;
+		}
+		//calculate R
+		for(int l = j; l < In->col; ++l){
+			//as <k*U, V> = k*<U,V>
+			double d = 0;
+			Matrix_submatrix(In, 0, In->row-1, l, l, In_col);
+			Matrix_dotProduct(temp, In_col , &d);
+			Out_R->numbers[j*Out_R->col + l] = d*euclideannorm;
+		}
+	}
+	Matrix_free(In_col);
+	Matrix_free(Out_col);
+	Matrix_free(temp);
+
+	return MATRIX_OK;
+}
 
 int Matrix_setMatrixtoZero(Matrix_t* In){
 	for(int k = 0; k < In->row*In->col; ++k){
@@ -1004,94 +1207,34 @@ int Matrix_setMatrixtoZero(Matrix_t* In){
 	return MATRIX_OK;
 }
 
-
 int Matrix_compare(Matrix_t* In_1, Matrix_t* In_2){
 	int i1 = Matrix_norm(In_1);
 	int i2 = Matrix_norm(In_2);
 	return (i1 > i2) - (i1 < i2);
 }
 
-//Please check input size
-Matrix_t* Matrix_transpose_2(Matrix_t* In){
-	Matrix_t* Out = Matrix_new(In->col, In->row, 0);
-	int k = 0;
-	for(int i = 0; i < In->col; ++i){
-		for(int j = 0; j < In->row; ++j){
-			Out->numbers[k++] = In->numbers[j * In->row + i];
-		}
+//VECTOR
+
+int Matrix_dotProduct(Matrix_t* In_1, Matrix_t* In_2, double* out){
+	if(In_1->col != 1 || In_2->col != 1 || In_1->row != In_2->row){
+		return MATRIX_ERROR | MATRIX_VECTOR;
 	}
-	return Out;
+	*out = 0;
+	for(int k = 0; k<In_1->row/* *In_1->col */; ++k){
+		*out += In_1->numbers[k] * In_2->numbers[k];
+	}
+
+
+	return MATRIX_OK;
 }
 
-Matrix_t* Matrix_submatrix_2(Matrix_t* In, unsigned int upper, unsigned int lower, unsigned int left, unsigned int right){
-	if(lower < upper || right <  left || Matrix_Internal_checkIndex(In, lower, upper) != MATRIX_OK){
-		return Matrix_new(0,0,0);
+int Matrix_magnitude(Matrix_t* In_1, double* out){
+	if(In_1->col != 1){
+		return MATRIX_ERROR | MATRIX_VECTOR;
 	}
-
-	Matrix_t* Out = Matrix_new(lower - upper + 1, right - left + 1, 0);
-	int k = 0;
-	for(int i = upper; i <= lower; ++i){
-		for(int j = left; j <= right; ++j){
-			Out->numbers[k++] = In->numbers[i * (In->col) + j];
-		}
-	}
-	return Out;
-}
-
-Matrix_t* Matrix_removeRow_2(Matrix_t* In, unsigned int row){
-	Matrix_t* Out = Matrix_new(In->row-1, In->col, 0);
-	int k = 0;
-	for(int i = 0; i < In->row; ++i){
-		for(int j = 0; j < In->col; ++j){
-			if(i != row){
-				Out->numbers[k++] = In->numbers[i * In->col + j];
-			}
-		}
-	}
-	return Out;
-}
-
-Matrix_t* Matrix_removeColumn_2(Matrix_t* In, unsigned int col){
-	Matrix_t* Out = Matrix_new(In->row-1, In->col, 0);
-	int k = 0;
-	for(int i = 0; i < In->row; ++i){
-		for(int j = 0; j < In->col; ++j){
-			if(j != col){
-				Out->numbers[k++] = In->numbers[i * In->col + j];
-			}
-		}
-	}
-	return Out;
-}
-
-Matrix_t* Matrix_hConcat_2(Matrix_t* In_1, Matrix_t* In_2){
-	Matrix_t* Out = Matrix_new(In_1->row, In_1->col + In_2->col, 0);
-	int k = 0;
-	for(int i = 0; i < In_1->row; ++i){
-		for(int j = 0; j < In_1->col; ++j){
-			Out->numbers[k++] = In_1->numbers[i*In_1->col+j];
-		}
-		for(int j = 0; j < In_2->row; ++j){
-			Out->numbers[k++] = In_2->numbers[i*In_2->col+j];
-		}
-	}
-	return Out;
-}
-
-Matrix_t* Matrix_vConcat_2(Matrix_t* In_1, Matrix_t* In_2){
-	Matrix_t* Out = Matrix_new(In_1->row + In_2->row, In_1->col, 0);
-	int k = 0;
-	for(int i = 0; i < In_1->row; ++i){
-		for(int j = 0; j < In_1->col; ++j){
-			Out->numbers[k++] = In_1->numbers[i*In_1->col+j];
-		}
-	}
-	for(int i = 0; i < In_2->row; ++i){
-		for(int j = 0; j < In_2->row; ++j){
-			Out->numbers[k++] = In_2->numbers[i*In_2->col+j];
-		}
-	}
-	return Out;
+	Matrix_dotProduct(In_1, In_1, out);
+	*out = sqrt(*out);
+	return MATRIX_OK;
 }
 
 //PARALLEL
