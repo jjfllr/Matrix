@@ -22,7 +22,7 @@ static int Matrix_Internal_checkDimensionsExact(Matrix_t* In_1, Matrix_t* In_2){
 	return MATRIX_OK;
 }
 
-static int Matrix_Internal_checkIndex(Matrix_t* In, int row, int col){/* checks if row and col are valid indexes for matrix M */
+static int Matrix_Internal_checkIndex(Matrix_t* In, unsigned int row, unsigned int col){/* checks if row and col are valid indexes for matrix M */
 	if(row > In->row || col > In->col){
 		return MATRIX_ERROR;
 	}
@@ -42,8 +42,8 @@ static int Matrix_Internal_checkTriangularUpper(Matrix_t* In){
 	}
 
 	char flag = 0x00;
-	for(int i = 0; i < In->row; ++i){
-		for(int j = 0; j < i; ++j){
+	for(unsigned int i = 0; i < In->row; ++i){
+		for(unsigned int j = 0; j < i; ++j){
 			if(In->numbers[i*In->col + j] != 0){
 				flag = 0x01;
 				break;
@@ -65,8 +65,8 @@ static int Matrix_Internal_checkTriangularLower(Matrix_t* In){
 		return MATRIX_OK;
 	}
 	char flag = 0x00;
-	for(int i = 0; i < In->row; ++i){
-		for(int j = i + 1; j < In->col; ++j){
+	for(unsigned int i = 0; i < In->row; ++i){
+		for(unsigned int j = i + 1; j < In->col; ++j){
 			if(In->numbers[i*In->col + j] != 0){
 				flag = 0x01;
 				break;
@@ -82,9 +82,8 @@ static int Matrix_Internal_checkDiagonal(Matrix_t* In){
 }
 */
 
-//Internal use just because they don't check conditions
 /*
-static Matrix_t* Matrix_hConcat_2(Matrix_t* In_1, Matrix_t* In_2){
+static Matrix_t* Matrix_Internal_hConcat(Matrix_t* In_1, Matrix_t* In_2){
 	Matrix_t* Out = Matrix_new(In_1->row, In_1->col + In_2->col, 0);
 	int k = 0;
 	for(int i = 0; i < In_1->row; ++i){
@@ -98,42 +97,43 @@ static Matrix_t* Matrix_hConcat_2(Matrix_t* In_1, Matrix_t* In_2){
 	return Out;
 }
 */
-static Matrix_t* Matrix_vConcat_2(Matrix_t* In_1, Matrix_t* In_2){
+
+static Matrix_t* Matrix_Internal_vConcat(Matrix_t* In_1, Matrix_t* In_2){
 	Matrix_t* Out = Matrix_new(In_1->row + In_2->row, In_1->col, 0);
 	int k = 0;
-	for(int i = 0; i < In_1->row; ++i){
-		for(int j = 0; j < In_1->col; ++j){
+	for(unsigned int i = 0; i < In_1->row; ++i){
+		for(unsigned int j = 0; j < In_1->col; ++j){
 			Out->numbers[k++] = In_1->numbers[i*In_1->col+j];
 		}
 	}
-	for(int i = 0; i < In_2->row; ++i){
-		for(int j = 0; j < In_2->row; ++j){
+	for(unsigned int i = 0; i < In_2->row; ++i){
+		for(unsigned int j = 0; j < In_2->row; ++j){
 			Out->numbers[k++] = In_2->numbers[i*In_2->col+j];
 		}
 	}
 	return Out;
 }
 
-static Matrix_t* Matrix_submatrix_2(Matrix_t* In, unsigned int upper, unsigned int lower, unsigned int left, unsigned int right){
+static Matrix_t* Matrix_Internal_submatrix(Matrix_t* In, unsigned int upper, unsigned int lower, unsigned int left, unsigned int right){
 	if(lower < upper || right <  left || Matrix_Internal_checkIndex(In, lower, upper) != MATRIX_OK){
 		return Matrix_new(0,0,0);
 	}
 
 	Matrix_t* Out = Matrix_new(lower - upper + 1, right - left + 1, 0);
 	int k = 0;
-	for(int i = upper; i <= lower; ++i){
-		for(int j = left; j <= right; ++j){
+	for(unsigned int i = upper; i <= lower; ++i){
+		for(unsigned int j = left; j <= right; ++j){
 			Out->numbers[k++] = In->numbers[i * (In->col) + j];
 		}
 	}
 	return Out;
 }
 
-static Matrix_t* Matrix_removeRow_2(Matrix_t* In, unsigned int row){
+static Matrix_t* Matrix_Internal_removeRow(Matrix_t* In, unsigned int row){
 	Matrix_t* Out = Matrix_new(In->row-1, In->col, 0);
 	int k = 0;
-	for(int i = 0; i < In->row; ++i){
-		for(int j = 0; j < In->col; ++j){
+	for(unsigned int i = 0; i < In->row; ++i){
+		for(unsigned int j = 0; j < In->col; ++j){
 			if(i != row){
 				Out->numbers[k++] = In->numbers[i * In->col + j];
 			}
@@ -143,7 +143,7 @@ static Matrix_t* Matrix_removeRow_2(Matrix_t* In, unsigned int row){
 }
 
 /*
-static Matrix_t* Matrix_removeColumn_2(Matrix_t* In, unsigned int col){
+static Matrix_t* Matrix_Internal_removeColumn(Matrix_t* In, unsigned int col){
 	Matrix_t* Out = Matrix_new(In->row-1, In->col, 0);
 	int k = 0;
 	for(int i = 0; i < In->row; ++i){
@@ -156,8 +156,12 @@ static Matrix_t* Matrix_removeColumn_2(Matrix_t* In, unsigned int col){
 	return Out;
 }
 */
+
+
+
 /*
-static Matrix_t* Matrix_transpose_2(Matrix_t* In){
+//Matrix_Internal_transpose is defined abode Matrix_transpose
+static Matrix_t* Matrix_Internal_transpose_2(Matrix_t* In){
 	Matrix_t* Out = Matrix_new(In->col, In->row, 0);
 	int k = 0;
 	for(int i = 0; i < In->col; ++i){
@@ -170,13 +174,17 @@ static Matrix_t* Matrix_transpose_2(Matrix_t* In){
 */
 
 //Constructors
-Matrix_t* Matrix_new(unsigned int row, unsigned int col, double val){
+Matrix_t* Matrix_new(size_t row, size_t col, double val){
+	if((int)row < 0 || (int)col < 0){
+		return NULL;
+	}
+
 	Matrix_t* Out = (Matrix_t *)malloc(sizeof(Matrix_t));
 	Out->row = row;
 	Out->col = col;
 	Out->numbers = (double*)malloc(sizeof(double)*row*col);
 	int k = 0;
-	for(int i = 0; i < (Out->row * Out->col); ++i){
+	for(unsigned int i = 0; i < (Out->row * Out->col); ++i){
 		Out->numbers[k++] = val;
 	}
 	return Out;
@@ -187,38 +195,38 @@ void Matrix_free(Matrix_t* In){
 	free(In);
 }
 
-Matrix_t* Matrix_identity(unsigned int n){
+Matrix_t* Matrix_identity(size_t n){
 	Matrix_t* I = Matrix_new(n, n, 0);
-	for(int i = 0; i < n; ++i){
+	for(unsigned int i = 0; i < n; ++i){
 		I->numbers[i*I->col + i] = 1;
 	}
 	return I;
 }
 
-Matrix_t* Matrix_zeroes(unsigned int row, unsigned int col){
+Matrix_t* Matrix_zeroes(size_t row, size_t col){
 	Matrix_t* A = Matrix_new(row, col, 0);
 	return A;
 }
 
-Matrix_t* Matrix_ones(unsigned int row, unsigned int col){
+Matrix_t* Matrix_ones(size_t row, size_t col){
 	Matrix_t* A = Matrix_new(row, col, 1);
 	return A;
 }
 
-Matrix_t* Matrix_random(unsigned int row, unsigned int col, double from, double to){
+Matrix_t* Matrix_random(size_t row, size_t col, double from, double to){
 	Matrix_t* R = Matrix_new(row, col, 0);
 	int k = 0;
-	for(int i = 0; i < row * col ; ++i){
+	for(unsigned int i = 0; i < row * col ; ++i){
 		double r = ((double)rand()) / ((double)RAND_MAX);
 		R->numbers[k++] = from + (to-from)*r;
 	}
 	return R;
 }
 
-Matrix_t* Matrix_random_int(unsigned int row, unsigned int col, int from, int to){
+Matrix_t* Matrix_random_int(size_t row, size_t col, int from, int to){
 	Matrix_t* R = Matrix_new(row, col, 0);
 	int k = 0;
-	for(int i = 0; i < row * col ; ++i){
+	for(unsigned int i = 0; i < row * col ; ++i){
 		double r = ((double)rand()) / ((double)RAND_MAX);
 		R->numbers[k++] = (int)(from + (to-from)*r);
 	}
@@ -246,7 +254,7 @@ int Matrix_scalarMultiplication(Matrix_t* In, double factor, Matrix_t* Out){
 	if(Matrix_Internal_checkDimensionsExact(In, Out)){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
-	for(int k = 0; k < In->row * In->col; ++k){
+	for(unsigned int k = 0; k < In->row * In->col; ++k){
 		Out->numbers[k] = In->numbers[k] * factor;
 	}
 	return MATRIX_OK;
@@ -257,7 +265,7 @@ int Matrix_addition(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
 			return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
 
-	for(int k = 0; k < In_1->row * In_1->col; ++k){
+	for(unsigned int k = 0; k < In_1->row * In_1->col; ++k){
 		Out->numbers[k] = In_1->numbers[k] + In_2->numbers[k];
 	}
 	return MATRIX_OK;
@@ -268,7 +276,7 @@ int Matrix_subtraction(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
 
-	for(int k = 0; k < In_1->row * In_1->col; ++k){
+	for(unsigned int k = 0; k < In_1->row * In_1->col; ++k){
 		Out->numbers[k] = In_1->numbers[k] - In_2->numbers[k];
 	}
 	return MATRIX_OK;
@@ -286,9 +294,9 @@ static void Matrix_Internal_multiplication(Matrix_t* In_1, Matrix_t* In_2, Matri
 		return;
 	}
 
-	for(int i = 0; i < In_1->row; ++i){
-		for(int j = 0; j < In_2->col; ++j){
-			for(int k = 0; k < In_2->row;++k){
+	for(unsigned int i = 0; i < In_1->row; ++i){
+		for(unsigned int j = 0; j < In_2->col; ++j){
+			for(unsigned int k = 0; k < In_2->row;++k){
 				Out->numbers[i * Out->col + j] += In_1->numbers[i * (In_1->col) + k] * In_2->numbers[k * (In_2->col) + j];
 			}
 		}
@@ -326,9 +334,9 @@ static void Matrix_Internal_multiplication_recursive(
 	//		else partition
 	if(a_left == a_right || a_upper == a_lower || b_left == b_right || b_upper == b_lower){
 
-		for(int i = 0; i < (a_lower - a_upper + 1); ++i){
-			for(int j = 0; j < (b_right-b_left + 1); ++j){
-				for(int k = 0; k < (b_lower - b_upper + 1);++k){
+		for(unsigned int i = 0; i < (a_lower - a_upper + 1); ++i){
+			for(unsigned int j = 0; j < (b_right-b_left + 1); ++j){
+				for(unsigned int k = 0; k < (b_lower - b_upper + 1);++k){
 					C->numbers[(a_upper + i)*C->col + (b_left + j)] +=
 							A->numbers[(a_upper + i) * (A->col) + (a_right + k)] * B->numbers[(b_upper + k) * (B->col) + (b_right + j)];
 				}
@@ -446,10 +454,11 @@ int Matrix_multiplication_recursive(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Ou
 }
 
 //definitions
+
 static void Matrix_Internal_transpose(Matrix_t* In, Matrix_t* Out){
 	int k = 0;
-	for(int i = 0; i < In->col; ++i){
-		for(int j = 0; j < In->row; ++j){
+	for(unsigned int i = 0; i < In->col; ++i){
+		for(unsigned int j = 0; j < In->row; ++j){
 			Out->numbers[k++] = In->numbers[j * In->row + i];
 		}
 	}
@@ -484,10 +493,10 @@ int Matrix_determinant(Matrix_t* In, double* out){
 		return MATRIX_OK;
 	}
 
-	Matrix_t* M1 = Matrix_removeRow_2(In, 0);
+	Matrix_t* M1 = Matrix_Internal_removeRow(In, 0);
 	Matrix_t* M2 = Matrix_zeroes(In->row-1, In->col-1);
 	double d = 0, sign = +1;
-	for(int j = 0; j < In->col; ++j){
+	for(unsigned int j = 0; j < In->col; ++j){
 		double c = In->numbers[j];
 		Matrix_removeColumn(M1, j, M2);
 		double temp = 0;
@@ -508,7 +517,7 @@ int Matrix_trace(Matrix_t* In, double* out){
 		return MATRIX_ERROR | MATRIX_SQUARE;
 	}
 	*out = 0;
-	for(int i = 0; i < In->col; ++i){
+	for(unsigned int i = 0; i < In->col; ++i){
 		*out += In->numbers[i*In->row+i];
 	}
 	return MATRIX_OK;
@@ -518,9 +527,9 @@ static void Matrix_Internal_adjoint(Matrix_t* In, Matrix_t* Out){
 	Matrix_t* A1 = Matrix_new(In->row - 1, In->col, 0);
 	Matrix_t* A2 = Matrix_new(In->row - 1, In->col - 1, 0);
 
-	for(int i = 0; i < In->row;++i){
+	for(unsigned int i = 0; i < In->row;++i){
 		Matrix_removeRow(In,i,A1);
-		for(int j = 0; j < In->col;++j){
+		for(unsigned int j = 0; j < In->col;++j){
 			Matrix_removeColumn(A1, j, A2);
 			double si = (i+j)%2 == 0 ? 1: -1;
 			double determ = 0;
@@ -592,12 +601,12 @@ int Matrix_inverse(Matrix_t* In, Matrix_t* Out){
 }
 
 static int Matrix_Internal_inverse_triangular_upper(Matrix_t* In, Matrix_t* Out){
-	for(int i = 0; i < Out->row; ++i){
+	for(unsigned int i = 0; i < Out->row; ++i){
 		//if element in diagonal is 0, then non invertible
 		if(In->numbers[i * (In->col) + i] == 0){
 			return MATRIX_ERROR | MATRIX_NON_INVERTIBLE;
 		}
-		for(int j = 0; j < Out->col; j++){
+		for(unsigned int j = 0; j < Out->col; j++){
 			if(j < i){
 				Out->numbers[i*Out->col+j] = 0;
 			} else if(j == i){
@@ -612,12 +621,12 @@ static int Matrix_Internal_inverse_triangular_upper(Matrix_t* In, Matrix_t* Out)
 
 static int Matrix_Internal_inverse_triangular_lower(Matrix_t* In, Matrix_t* Out){
 
-	for(int i = 0; i < Out->row; ++i){
+	for(unsigned int i = 0; i < Out->row; ++i){
 		//if element in diagonal is 0, then non invertible
 		if(In->numbers[i * (In->col) + i] == 0){
 			return MATRIX_ERROR | MATRIX_NON_INVERTIBLE;
 		}
-		for(int j = 0; j < Out->col; j++){
+		for(unsigned int j = 0; j < Out->col; j++){
 			if(j < i){
 				Out->numbers[i*Out->col+j] = In->numbers[i*(In->col) + j]/In->numbers[j*In->col+j];
 			} else if(j == i){
@@ -679,8 +688,8 @@ void Matrix_display(Matrix_t* In){
 	if(In->row > 0 && In->col > 0){
 		int k = 0;
 		printf("[");
-		for(int i = 0; i < In->row; ++i){
-			for(int j = 0; j < In->col; ++j){
+		for(unsigned int i = 0; i < In->row; ++i){
+			for(unsigned int j = 0; j < In->col; ++j){
 				if(j < In->col - 1){
 					printf("\t%f", In->numbers[k++]);
 				} else {
@@ -701,7 +710,7 @@ void Matrix_display(Matrix_t* In){
 
 Matrix_t* Matrix_copy(Matrix_t* In){
 	Matrix_t* Out = Matrix_new(In->row, In->col, 0);
-	for(int k = 0; k < In->row * In->col; k++){
+	for(unsigned int k = 0; k < In->row * In->col; k++){
 		Out->numbers[k]=In->numbers[k];
 	}
 	return Out;
@@ -711,7 +720,7 @@ int Matrix_copyTo(Matrix_t* In, Matrix_t* Out){
 	if(Matrix_Internal_checkDimensionsExact(In, Out)){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
-	for(int k = 0; k < In->row * In->col; k++){
+	for(unsigned int k = 0; k < In->row * In->col; k++){
 			Out->numbers[k]=In->numbers[k];
 		}
 	return MATRIX_OK;
@@ -726,8 +735,8 @@ int Matrix_submatrix(Matrix_t* In, unsigned int upper, unsigned int lower, unsig
 	}
 
 	int k = 0;
-	for(int i = upper; i <= lower; ++i){
-		for(int j = left; j <= right; ++j){
+	for(unsigned int i = upper; i <= lower; ++i){
+		for(unsigned int j = left; j <= right; ++j){
 			Out->numbers[k++] = In->numbers[i*In->col + j ];
 		}
 	}
@@ -739,8 +748,8 @@ int Matrix_removeRow(Matrix_t* In, unsigned int row, Matrix_t* Out){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
 	int k = 0;
-	for(int i = 0; i < In->row; ++i){
-		for(int j = 0; j < In->col; ++j){
+	for(unsigned int i = 0; i < In->row; ++i){
+		for(unsigned int j = 0; j < In->col; ++j){
 			if(i != row){
 				Out->numbers[k++] = In->numbers[i * In->col + j];
 			}
@@ -754,8 +763,8 @@ int Matrix_removeColumn(Matrix_t* In, unsigned int col, Matrix_t* Out){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
 	int k = 0;
-	for(int i = 0; i < In->row; ++i){
-		for(int j = 0; j < In->col; ++j){
+	for(unsigned int i = 0; i < In->row; ++i){
+		for(unsigned int j = 0; j < In->col; ++j){
 			if(j != col){
 				Out->numbers[k++] = In->numbers[i * In->col + j];
 			}
@@ -768,7 +777,7 @@ int Matrix_removeColumn(Matrix_t* In, unsigned int col, Matrix_t* Out){
 Matrix_t* Matrix_rowEchelon(Matrix_t* In){
 	//__TODO__ Matrix_rowEchelon(Matrix_t* In, Matrix_t* Out)
 	if(In->row == 1){
-		for(int j = 0; j < In->col;++j){
+		for(unsigned int j = 0; j < In->col;++j){
 			//search first element different to 0 and normalize
 			if( !(fabs(In->numbers[j]-0.0) <= FLT_EPSILON) ){
 				Matrix_t* B = Matrix_new(In->row, In->col, 0);
@@ -780,12 +789,12 @@ Matrix_t* Matrix_rowEchelon(Matrix_t* In){
 		return B;
 	}
 	Matrix_t* B = Matrix_copy(In);
-	int ind1 = B->col;
-	int ind2 = 0;
+	unsigned int ind1 = B->col;
+	unsigned int ind2 = 0;
 	//search first not zero entry
-	for(int i = 0; i < B->row; ++i){
-		for(int j = 0; j < B->col; ++j){
-			if(B->numbers[i*B->col+j]!=0 && j < ind1){
+	for(unsigned int i = 0; i < B->row; ++i){
+		for(unsigned int j = 0; j < B->col; ++j){
+			if(B->numbers[i*B->col+j]!= 0 && j < ind1){
 				ind1 = j;
 				ind2 = i;
 				break;
@@ -794,7 +803,7 @@ Matrix_t* Matrix_rowEchelon(Matrix_t* In){
 	}
 	if(ind2 > 1){
 		//if I am not in the first row, swap it with the first
-		for(int j = 0; j < B->col; ++j){
+		for(unsigned int j = 0; j < B->col; ++j){
 			double temp = B->numbers[j];
 			B->numbers[j] = B->numbers[ind2*B->col+j];
 			B->numbers[ind2*B->col+j] = temp;
@@ -803,20 +812,20 @@ Matrix_t* Matrix_rowEchelon(Matrix_t* In){
 	if(B->numbers[0]!=0){
 		//normalize first row so the first digit is 1 (or 0)
 		double coef = B->numbers[0];
-		for(int j = 0; j < B->col; ++j){
+		for(unsigned int j = 0; j < B->col; ++j){
 			B->numbers[j] /= coef;
 		}
 		//Row = row - row_coef * row_0
-		for(int i = 1; i < B->row; ++i){
+		for(unsigned int i = 1; i < B->row; ++i){
 			coef = B->numbers[i*B->col];
-			for(int j = 0; j < B->col; ++j){
+			for(unsigned int j = 0; j < B->col; ++j){
 				B->numbers[i*B->col+j] -= coef * B->numbers[j];
 			}
 		}
 	} else {
 		//normalize first row
 		double coef = 0;
-		for(int j = 0; j < B->col;++j){
+		for(unsigned int j = 0; j < B->col;++j){
 			if(B->numbers[j] != 0 && coef == 0){
 				coef = B->numbers[j];
 				B->numbers[j] = 1;
@@ -824,9 +833,9 @@ Matrix_t* Matrix_rowEchelon(Matrix_t* In){
 				B->numbers[j] /= coef;
 			}
 		}
-		for(int i = 1; i < B->row; ++i){
+		for(unsigned int i = 1; i < B->row; ++i){
 			coef = B->numbers[i*B->col];
-			for(int j = 0; j < B->col; ++j){
+			for(unsigned int j = 0; j < B->col; ++j){
 				if(B->numbers[i*B->col+j] != 0 && coef == 0){
 					coef = B->numbers[i*B->col+j];
 					B->numbers[i*B->col+j] = 0;
@@ -837,12 +846,12 @@ Matrix_t* Matrix_rowEchelon(Matrix_t* In){
 		}
 	}
 	//remove first row, repeat process
-	Matrix_t* B1 = Matrix_removeRow_2(B,0);
+	Matrix_t* B1 = Matrix_Internal_removeRow(B,0);
 	Matrix_t* Be = Matrix_rowEchelon(B1);
 
 	//copy results from Be to B
-	for(int i = 0; i < Be->row; ++i){
-		for(int j = 0; j < Be->col; ++j ){
+	for(unsigned int i = 0; i < Be->row; ++i){
+		for(unsigned int j = 0; j < Be->col; ++j ){
 			B->numbers[(i+1)*B->col+j] = Be->numbers[(i)*Be->col+j];
 		}
 	}
@@ -862,7 +871,7 @@ static Matrix_t* Matrix_Internal_reducedRowEchelon(Matrix_t* In){
 	char flag = 0x00;
 
 	for(int i = R->row - 1; i >= 0 && flag == 0x00; --i){
-		for(int j = 0; j < R->col; ++j){
+		for(unsigned int j = 0; j < R->col; ++j){
 			if(R->numbers[i*R->col+j] != 0.0){
 				idx1 = i; idx2 = j;
 				flag = 0x01;
@@ -873,17 +882,17 @@ static Matrix_t* Matrix_Internal_reducedRowEchelon(Matrix_t* In){
 	//subtract in the rows abode
 	for(int i = idx1-1; i >= 0; --i){
 		double coef = R->numbers[i*R->col+idx2];
-		for(int j = 0; j < R->col; ++j){
+		for(unsigned int j = 0; j < R->col; ++j){
 			R->numbers[i*R->col + j] -= coef*R->numbers[idx1*R->col + j];
 		}
 	}
 	//eliminate the lower n rows and calculate recursively
-	Matrix_t* R1 = Matrix_submatrix_2(R, 0, idx1-1, 0, R->col-1);
+	Matrix_t* R1 = Matrix_Internal_submatrix(R, 0, idx1-1, 0, R->col-1);
 	Matrix_t* R2 = Matrix_Internal_reducedRowEchelon(R1);
 	Matrix_free(R1);
 	//copy values
 	for(int i = 0; i < idx1; ++i){
-		for(int j = 0; j < R->col; ++j){
+		for(unsigned int j = 0; j < R->col; ++j){
 			R->numbers[i*R->col + j] = R2->numbers[i*R->col + j];
 		}
 	}
@@ -904,11 +913,11 @@ int Matrix_hConcat(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
 		return MATRIX_ERROR || MATRIX_DIMENSIONS;
 	}
 	int k = 0;
-	for(int i = 0; i < In_1->row; ++i){
-		for(int j = 0; j < In_1->col; ++j){
+	for(unsigned int i = 0; i < In_1->row; ++i){
+		for(unsigned int j = 0; j < In_1->col; ++j){
 			Out->numbers[k++] = In_1->numbers[i*In_1->col+j];
 		}
-		for(int j = 0; j < In_2->row; ++j){
+		for(unsigned int j = 0; j < In_2->row; ++j){
 			Out->numbers[k++] = In_2->numbers[i*In_2->col+j];
 		}
 	}
@@ -920,13 +929,13 @@ int Matrix_vConcat(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
 		return MATRIX_ERROR || MATRIX_DIMENSIONS;
 	}
 	int k = 0;
-	for(int i = 0; i < In_1->row; ++i){
-		for(int j = 0; j < In_1->col; ++j){
+	for(unsigned int i = 0; i < In_1->row; ++i){
+		for(unsigned int j = 0; j < In_1->col; ++j){
 			Out->numbers[k++] = In_1->numbers[i*In_1->col+j];
 		}
 	}
-	for(int i = 0; i < In_2->row; ++i){
-		for(int j = 0; j < In_2->row; ++j){
+	for(unsigned int i = 0; i < In_2->row; ++i){
+		for(unsigned int j = 0; j < In_2->row; ++j){
 			Out->numbers[k++] = In_2->numbers[i*In_2->col+j];
 		}
 	}
@@ -935,7 +944,7 @@ int Matrix_vConcat(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
 
 double Matrix_norm(Matrix_t* In){
 	double d = 0;
-	for(int k = 0; k < In->row*In->col; ++k){
+	for(unsigned int k = 0; k < In->row*In->col; ++k){
 		d += In->numbers[k]*In->numbers[k];
 	}
 	return sqrt(d);
@@ -951,7 +960,7 @@ Matrix_t* Matrix_nullSpace(Matrix_t* In){
 	int k = RM->row-1;
 	for(int i = RM->row-1; i >= 0; --i){
 		char flag = 0x00;
-		for(int j =0; j < RM->col; ++j){
+		for(unsigned int j =0; j < RM->col; ++j){
 			if(RM->numbers[i*RM->col+j]!=0){
 				flag = 0x01;
 				break;
@@ -963,7 +972,7 @@ Matrix_t* Matrix_nullSpace(Matrix_t* In){
 		}
 	}
 
-	Matrix_t* RRM = Matrix_submatrix_2(RM, 0, k, 0, RM->col-1);
+	Matrix_t* RRM = Matrix_Internal_submatrix(RM, 0, k, 0, RM->col-1);
 	Matrix_free(RM);
 
 	unsigned int nn = RRM->col - RRM->row;
@@ -974,7 +983,7 @@ Matrix_t* Matrix_nullSpace(Matrix_t* In){
 	}
 
 	//obtain free columns R2
-	Matrix_t* F = Matrix_submatrix_2(RRM, 0, RRM->row - 1, RRM->row, RRM->col-1);
+	Matrix_t* F = Matrix_Internal_submatrix(RRM, 0, RRM->row - 1, RRM->row, RRM->col-1);
 	Matrix_free(RRM);
 
 
@@ -984,7 +993,7 @@ Matrix_t* Matrix_nullSpace(Matrix_t* In){
 	Matrix_scalarMultiplication(F, -1, F);
 
 	//concat with identity
-	Matrix_t* N = Matrix_vConcat_2(F,I);
+	Matrix_t* N = Matrix_Internal_vConcat(F,I);
 	Matrix_free(F);
 	Matrix_free(I);
 
@@ -1015,9 +1024,9 @@ int Matrix_descomposition_LU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_U){
 		c = 1/a;
 	}
 
-	Matrix_t* w  = Matrix_submatrix_2(In, 0, 0, 1, In->col-1);
-	Matrix_t* v  = Matrix_submatrix_2(In, 1, In->row-1, 0,0);
-	Matrix_t* Ab = Matrix_submatrix_2(In, 1, In->row-1, 1, In->col-1);
+	Matrix_t* w  = Matrix_Internal_submatrix(In, 0, 0, 1, In->col-1);
+	Matrix_t* v  = Matrix_Internal_submatrix(In, 1, In->row-1, 0,0);
+	Matrix_t* Ab = Matrix_Internal_submatrix(In, 1, In->row-1, 1, In->col-1);
 	Matrix_t* T1 = Matrix_new(v->row, w->col, 0);
 
 	Matrix_multiplication(v, w, T1);
@@ -1032,8 +1041,8 @@ int Matrix_descomposition_LU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_U){
 
 	//put the descomposition inside our matrixes
 	int k = 0;
-	for(int i = 0; i < In->row; ++i){
-		for(int j = 0; j < In->col; ++j){
+	for(unsigned int i = 0; i < In->row; ++i){
+		for(unsigned int j = 0; j < In->col; ++j){
 			if(i == 0 && j == 0){
 				Out_L->numbers[k] = 1;
 				Out_U->numbers[k] = a;
@@ -1082,8 +1091,8 @@ int Matrix_descomposition_LDU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_D, Ma
 	Matrix_descomposition_LU(In, Out_L, Out_U);
 	//Matrix U has the coeficients of Matrix D
 	//must assure that matrix D has zeros in non diagonal index;
-	for(int i = 0; i < In->col; ++i){
-		for(int j = 0; j < In->row; ++j){
+	for(unsigned int i = 0; i < In->col; ++i){
+		for(unsigned int j = 0; j < In->row; ++j){
 			if(i == j){
 				Out_D->numbers[i*In->col+j] = Out_U->numbers[i*In->col+j];
 				Out_U->numbers[i*In->col+j] = 1;
@@ -1102,24 +1111,24 @@ static void Matrix_Internal_orthogonalization(Matrix_t* In, Matrix_t* Out){
 	//e1 = 1 / ||u1|| * u1
 	//u_n = v_n - sum( [<V_n, U_k>/<u_k, u_k>]*u_k )
 	//e_n = u_n / ||u_n||
-	for(int j = 0; j < In->col; ++j){
+	for(unsigned int j = 0; j < In->col; ++j){
 		Matrix_submatrix(In, 0, In->row-1, j, j, In_col); // V_n
 		Matrix_submatrix(In, 0, In->row-1, j, j, temp);
 		double euclideannorm = 0;
-		for(int k = 0; k < j; ++k){
+		for(unsigned int k = 0; k < j; ++k){
 			Matrix_submatrix(Out, 0, Out->row-1, k, k, Out_col); // U_k
 			double d1 = 0, d2 = 0;
 			Matrix_dotProduct(In_col, Out_col, &d1); // <V_n, U_k>
 			Matrix_dotProduct(Out_col, Out_col, &d2); // <U_k, U_k>
 			d2 = 1/d2;
-			for(int i = 0; i < In->row; ++i){
+			for(unsigned int i = 0; i < In->row; ++i){
 				temp->numbers[i] -= d1 * d2 * Out_col->numbers[i]; // sum( [<V_n, U_k>/<u_k, u_k>]*u_k )
 			}
 		}
 		Matrix_magnitude(temp, &euclideannorm);
 		euclideannorm = 1/euclideannorm;
 
-		for(int i = 0; i < In->row; ++i){
+		for(unsigned int i = 0; i < In->row; ++i){
 			Out->numbers[i*In->col + j] = temp->numbers[i] * euclideannorm;
 		}
 
@@ -1164,28 +1173,28 @@ int Matrix_descomposition_QR(Matrix_t* In, Matrix_t* Out_Q, Matrix_t* Out_R){
 	Matrix_t* Out_col = Matrix_new(In->row, 1, 0);
 	Matrix_t* temp = Matrix_new(In->row, 1, 0);
 
-	for(int j = 0; j < In->col; ++j){
+	for(unsigned int j = 0; j < In->col; ++j){
 		Matrix_submatrix(In, 0, In->row-1, j, j, In_col); // V_n
 		Matrix_submatrix(In, 0, In->row-1, j, j, temp);
 		double euclideannorm = 0;
-		for(int k = 0; k < j; ++k){
+		for(unsigned int k = 0; k < j; ++k){
 			Matrix_submatrix(Out_Q, 0, Out_Q->row-1, k, k, Out_col); // U_k
 			double d1 = 0, d2 = 0;
 			Matrix_dotProduct(In_col, Out_col, &d1); // <V_n, U_k>
 			Matrix_dotProduct(Out_col, Out_col, &d2); // <U_k, U_k>
 			d2 = 1/d2;
-			for(int i = 0; i < In->row; ++i){
+			for(unsigned int i = 0; i < In->row; ++i){
 				temp->numbers[i] -= d1 * d2 * Out_col->numbers[i]; // sum( [<V_n, U_k>/<u_k, u_k>]*u_k )
 			}
 		}
 		Matrix_magnitude(temp, &euclideannorm);
 		euclideannorm = 1/euclideannorm;
 
-		for(int i = 0; i < In->row; ++i){
+		for(unsigned int i = 0; i < In->row; ++i){
 			Out_Q->numbers[i*In->col + j] = temp->numbers[i] * euclideannorm;
 		}
 		//calculate R
-		for(int l = j; l < In->col; ++l){
+		for(unsigned int l = j; l < In->col; ++l){
 			//as <k*U, V> = k*<U,V>
 			double d = 0;
 			Matrix_submatrix(In, 0, In->row-1, l, l, In_col);
@@ -1201,7 +1210,7 @@ int Matrix_descomposition_QR(Matrix_t* In, Matrix_t* Out_Q, Matrix_t* Out_R){
 }
 
 int Matrix_setMatrixtoZero(Matrix_t* In){
-	for(int k = 0; k < In->row*In->col; ++k){
+	for(unsigned int k = 0; k < In->row*In->col; ++k){
 		In->numbers[k] = 0;
 	}
 	return MATRIX_OK;
@@ -1213,6 +1222,17 @@ int Matrix_compare(Matrix_t* In_1, Matrix_t* In_2){
 	return (i1 > i2) - (i1 < i2);
 }
 
+/*
+
+/int Matrix_eigenValuesVectors(Matrix_t* In, Matrix_t* Out_Eigenvalues_real, Matrix_t* Out_Eigenvalues_imaginary, Matrix_t* Out_Eigenvectors_real, Matrix_t* Out_Eigenvectors_imaginary){
+	//In should be square
+	//Eigenvectors should have the same dimension of In
+	//Eigenvalues should be 1x
+	return MATRIX_OK;
+
+}
+*/
+
 //VECTOR
 
 int Matrix_dotProduct(Matrix_t* In_1, Matrix_t* In_2, double* out){
@@ -1220,7 +1240,7 @@ int Matrix_dotProduct(Matrix_t* In_1, Matrix_t* In_2, double* out){
 		return MATRIX_ERROR | MATRIX_VECTOR;
 	}
 	*out = 0;
-	for(int k = 0; k<In_1->row/* *In_1->col */; ++k){
+	for(unsigned int k = 0; k<In_1->row/* *In_1->col */; ++k){
 		*out += In_1->numbers[k] * In_2->numbers[k];
 	}
 

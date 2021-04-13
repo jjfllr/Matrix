@@ -13,9 +13,13 @@
  	 	 	 	 	 	 	 	- Inverse of any triangular Matrix (original only upper triangular)
  	 	 	 	 	 	 	 	- Dot product and Magnitude for vectors
 								- Gram-Schmidt Orthonormalization for matrixes
-To do		: 	Pthread Matix multiplication
-				EigenValues
+
+To do		: 	EigenValues
 				EigenVectors
+				Diagonalization
+				Matrix Power
+				Convolution (2 kinds, with and w/o expansion)
+				Pthread Matix multiplication
 
  ============================================================================
  */
@@ -25,18 +29,18 @@ To do		: 	Pthread Matix multiplication
 	//struct definition
 
 	typedef struct Matrix_t{
-		unsigned int row;
-		unsigned int col;
+		size_t row;
+		size_t col;
 		double* numbers;
 	} Matrix_t;
 
 	//Constructor
-	Matrix_t* Matrix_new(unsigned int row, unsigned int col, double val); /* Allocates new matrix of row x col dimensions, filled with val */
-	Matrix_t* Matrix_identity(unsigned int n); /* Allocates new Identity matrix of dimension n x n*/
-	Matrix_t* Matrix_zeroes(unsigned int row, unsigned int col); /* Allocates new matrix of dimensions row * col, filled with zeroes */
-	Matrix_t* Matrix_ones(unsigned int row, unsigned int col); /* Allocates new matrix of dimensions row * col, filled with ones */
-	Matrix_t* Matrix_random(unsigned int row, unsigned int col, double from, double to); /* Allocates new matrix of dimensions row * col, filled with values between lower and upper inclusives */
-	Matrix_t* Matrix_random_int(unsigned int row, unsigned int col, int lower, int upper); /* Allocates new matrix of dimensions row * col, filled with values between lower and upper inclusives */
+	Matrix_t* Matrix_new(size_t row, size_t col, double val); /* Allocates new matrix of row x col dimensions, filled with val */
+	Matrix_t* Matrix_identity(size_t n); /* Allocates new Identity matrix of dimension n x n*/
+	Matrix_t* Matrix_zeroes(size_t row, size_t col); /* Allocates new matrix of dimensions row * col, filled with zeroes */
+	Matrix_t* Matrix_ones(size_t row, size_t col); /* Allocates new matrix of dimensions row * col, filled with ones */
+	Matrix_t* Matrix_random(size_t row, size_t col, double from, double to); /* Allocates new matrix of dimensions row * col, filled with values between lower and upper inclusives */
+	Matrix_t* Matrix_random_int(size_t row, size_t col, int lower, int upper); /* Allocates new matrix of dimensions row * col, filled with values between lower and upper inclusives */
 	//De-constructor
 	void Matrix_free(Matrix_t* In); /* free allocation of matrix M */
 	//Getter
@@ -74,6 +78,8 @@ To do		: 	Pthread Matix multiplication
 
 	Matrix_t* Matrix_rowEchelon(Matrix_t* In); /* Echelon form of the Matrix M */
 	Matrix_t* Matrix_reducedRowEchelon(Matrix_t* In); /* Reduced Echelon form of the Matrix M */
+
+	int Matrix_eigenValuesVectors(Matrix_t* In, Matrix_t* Out_Eigenvalues_real, Matrix_t* Out_Eigenvalues_imaginary, Matrix_t* Out_Eigenvectors_real, Matrix_t* Out_Eigenvectors_imaginary); /* Calculates the EigenValues and Eigenvectors of Matrix In, Out matrix separated in real and imaginary part */
 
 
 	int Matrix_hConcat(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out); /* Concatenates the matrix In_2 to In_1 horizontally */
