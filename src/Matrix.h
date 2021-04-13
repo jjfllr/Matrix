@@ -26,6 +26,11 @@ To do		: 	EigenValues
 
 #ifndef MATRIX_H_
 #define MATRIX_H_
+
+#ifndef NULL
+#define NULL (void*)0
+#endif
+
 	//struct definition
 
 	typedef struct Matrix_t{

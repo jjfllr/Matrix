@@ -23,7 +23,7 @@ static int Matrix_Internal_checkDimensionsExact(Matrix_t* In_1, Matrix_t* In_2){
 }
 
 static int Matrix_Internal_checkIndex(Matrix_t* In, unsigned int row, unsigned int col){/* checks if row and col are valid indexes for matrix M */
-	if(row > In->row || col > In->col){
+	if(row >= In->row || col >= In->col || (int)row < 0 || (int)col < 0){
 		return MATRIX_ERROR;
 	}
 	return MATRIX_OK;
@@ -157,8 +157,6 @@ static Matrix_t* Matrix_Internal_removeColumn(Matrix_t* In, unsigned int col){
 }
 */
 
-
-
 /*
 //Matrix_Internal_transpose is defined abode Matrix_transpose
 static Matrix_t* Matrix_Internal_transpose_2(Matrix_t* In){
@@ -176,7 +174,7 @@ static Matrix_t* Matrix_Internal_transpose_2(Matrix_t* In){
 //Constructors
 Matrix_t* Matrix_new(size_t row, size_t col, double val){
 	if((int)row < 0 || (int)col < 0){
-		return NULL;
+		return (Matrix_t*)NULL;
 	}
 
 	Matrix_t* Out = (Matrix_t *)malloc(sizeof(Matrix_t));
@@ -191,11 +189,19 @@ Matrix_t* Matrix_new(size_t row, size_t col, double val){
 }
 
 void Matrix_free(Matrix_t* In){
-	free(In->numbers);
-	free(In);
+	if(In == NULL){
+		free((Matrix_t*) In);
+		return;
+	}
+	free((double*)In->numbers);
+	free((Matrix_t*)In);
 }
 
 Matrix_t* Matrix_identity(size_t n){
+	if((int)n < 0){
+		return NULL;
+	}
+
 	Matrix_t* I = Matrix_new(n, n, 0);
 	for(unsigned int i = 0; i < n; ++i){
 		I->numbers[i*I->col + i] = 1;
@@ -204,16 +210,27 @@ Matrix_t* Matrix_identity(size_t n){
 }
 
 Matrix_t* Matrix_zeroes(size_t row, size_t col){
-	Matrix_t* A = Matrix_new(row, col, 0);
-	return A;
+	if((int)row < 0 || (int)col < 0){
+		return NULL;
+	}
+
+	Matrix_t* Z = Matrix_new(row, col, 0);
+	return Z;
 }
 
 Matrix_t* Matrix_ones(size_t row, size_t col){
+	if((int)row < 0 || (int)col < 0){
+		return NULL;
+	}
 	Matrix_t* A = Matrix_new(row, col, 1);
 	return A;
 }
 
 Matrix_t* Matrix_random(size_t row, size_t col, double from, double to){
+	if((int)row < 0 || (int)col < 0){
+		return NULL;
+	}
+
 	Matrix_t* R = Matrix_new(row, col, 0);
 	int k = 0;
 	for(unsigned int i = 0; i < row * col ; ++i){
@@ -224,6 +241,10 @@ Matrix_t* Matrix_random(size_t row, size_t col, double from, double to){
 }
 
 Matrix_t* Matrix_random_int(size_t row, size_t col, int from, int to){
+	if((int)row < 0 || (int)col < 0){
+		return NULL;
+	}
+
 	Matrix_t* R = Matrix_new(row, col, 0);
 	int k = 0;
 	for(unsigned int i = 0; i < row * col ; ++i){
