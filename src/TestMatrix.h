@@ -70,7 +70,7 @@
 #include "Matrix.h"
 
 #define TEST_PASS printf("PASSED\n");
-#define TEST_FAIL printf("FAILED (%d)\n", __LINE__);
+#define TEST_FAIL printf("FAILED (Line:%d)\n", __LINE__);
 #define INTRO printf("%s \t", __FUNCTION__ );
 #define __TODO__  printf("\tTo do:%s\n", __FUNCTION__);
 
@@ -283,28 +283,545 @@ void Test_Matrix_get(){
 
 void Test_Matrix_set(){
 	INTRO
-	__TODO__
+	unsigned int row = 3;
+	unsigned int col = 4;
+	double val = 3.5;
+	Matrix_t* M = Matrix_new(row,col, val);
+
+	double get = 15;
+
+	//out of bounds set
+	if(Matrix_set(M, row, col-1, get) == MATRIX_OK){
+		Matrix_free(M);
+		TEST_FAIL;
+		return;
+	}
+
+	if(Matrix_set(M,row-1, col, get) == MATRIX_OK){
+		Matrix_free(M);
+		TEST_FAIL;
+		return;
+	}
+
+	if(Matrix_set(M,row-1, -2, get) == MATRIX_OK){
+		Matrix_free(M);
+		TEST_FAIL;
+		return;
+	}
+
+	if(Matrix_set(M, -2, col-1, get) == MATRIX_OK){
+		Matrix_free(M);
+		TEST_FAIL;
+		return;
+	}
+
+	// in Bound set
+
+	if(Matrix_set(M, (unsigned int)((row - 1)/2), (unsigned int)((col - 1)/2), get) != MATRIX_OK){
+		Matrix_free(M);
+		TEST_FAIL;
+		return;
+	}
+	if(M->numbers[(row - 1)/2 * M->col + (col - 1)/2] != get){
+		Matrix_free(M);
+		TEST_FAIL;
+		return;
+	}
+
+	Matrix_free(M);
+	TEST_PASS;
+
 }
+
 void Test_Matrix_scalarMultiplication(){
 	INTRO
-	__TODO__
+	unsigned int row = 3;
+	unsigned int col = 4;
+	double val = 3.5;
+	Matrix_t* M = Matrix_new(row,col, val);
+	Matrix_t* N = Matrix_zeroes(row,col);
+	Matrix_t* O = Matrix_zeroes(col, row);
+
+
+	//wrong output size
+	if(Matrix_scalarMultiplication(M,val,O) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		TEST_FAIL;
+		return;
+	}
+
+	//Right output size
+	if(Matrix_scalarMultiplication(M,val,N) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		TEST_FAIL;
+		return;
+	}
+
+	for(unsigned int k = 0; k < N->row*N->col; ++k){
+		if(N->numbers[k] != val*M->numbers[k]){
+			Matrix_free(M);
+			Matrix_free(N);
+			Matrix_free(O);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	//Input = output
+	//copy N as M
+	if(Matrix_scalarMultiplication(M,1,N) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		TEST_FAIL;
+		return;
+	}
+
+	//N = val * N
+	if(Matrix_scalarMultiplication(N,val,N) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		TEST_FAIL;
+		return;
+	}
+
+	//check if done correctly
+	for(unsigned int k = 0; k < N->row*N->col; ++k){
+		if(N->numbers[k] != val*M->numbers[k]){
+			Matrix_free(M);
+			Matrix_free(N);
+			Matrix_free(O);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	Matrix_free(M);
+	Matrix_free(N);
+	Matrix_free(O);
+	TEST_PASS;
+	return;
 }
+
 void Test_Matrix_addition(){
 	INTRO
-	__TODO__
+	unsigned int row = 3;
+	unsigned int col = 4;
+	double val1 = 3.5, val2 = 5.25;
+	Matrix_t* M = Matrix_new(row, col, val1);
+	Matrix_t* N = Matrix_new(row, col, val2);
+	Matrix_t* O = Matrix_zeroes(row, col);
+	Matrix_t* Q = Matrix_new(row, col + 1, val1);
+
+	//Wreong size input
+	if(Matrix_addition(Q, N, O) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	if(Matrix_addition(M, Q, O) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	//wrong size output
+	if(Matrix_addition(M, N, Q) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	//right op
+	if(Matrix_addition(M, N, O) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		if(O->numbers[k] != val1 + val2){
+			Matrix_free(M);
+			Matrix_free(N);
+			Matrix_free(O);
+			Matrix_free(Q);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	//input same as output
+	if(Matrix_addition(M, N, N) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		if(N->numbers[k] != val1 + val2){
+			Matrix_free(M);
+			Matrix_free(N);
+			Matrix_free(O);
+			Matrix_free(Q);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	if(Matrix_addition(M, N, M) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		//N is val1 + val2, M is val1
+		if(M->numbers[k] != val1 + val1 + val2){
+			Matrix_free(M);
+			Matrix_free(N);
+			Matrix_free(O);
+			Matrix_free(Q);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	Matrix_free(M);
+	Matrix_free(N);
+	Matrix_free(O);
+	Matrix_free(Q);
+	TEST_PASS;
+	return;
 }
+
 void Test_Matrix_subtraction(){
 	INTRO
-	__TODO__
+	unsigned int row = 3;
+	unsigned int col = 4;
+	double val1 = 3.5, val2 = 5.25;
+	Matrix_t* M = Matrix_new(row, col, val1);
+	Matrix_t* N = Matrix_new(row, col, val2);
+	Matrix_t* O = Matrix_zeroes(row, col);
+	Matrix_t* Q = Matrix_new(row, col + 1, val1);
+
+	//Wreong size input
+	if(Matrix_subtraction(Q, N, O) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	if(Matrix_subtraction(M, Q, O) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	//wrong size output
+	if(Matrix_subtraction(M, N, Q) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	//right op
+	if(Matrix_subtraction(M, N, O) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		if(O->numbers[k] != val1 - val2){
+			Matrix_free(M);
+			Matrix_free(N);
+			Matrix_free(O);
+			Matrix_free(Q);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	//input same as output
+	if(Matrix_subtraction(M, N, N) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		if(N->numbers[k] != val1 - val2){
+			Matrix_free(M);
+			Matrix_free(N);
+			Matrix_free(O);
+			Matrix_free(Q);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	if(Matrix_subtraction(M, N, M) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		//N is (val1 - val2), M is val1
+		if(M->numbers[k] != val1 - (val1 - val2)){
+			Matrix_free(M);
+			Matrix_free(N);
+			Matrix_free(O);
+			Matrix_free(Q);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	Matrix_free(M);
+	Matrix_free(N);
+	Matrix_free(O);
+	Matrix_free(Q);
+	TEST_PASS;
+	return;
 }
+
 void Test_Matrix_multiplication(){
 	INTRO
-	__TODO__
+	unsigned int row = 3;
+	unsigned int col = 4;
+	double val1 = 3.5, val2 = 5.25;
+	Matrix_t* M = Matrix_new(row, col, val1);
+	Matrix_t* N = Matrix_new(col, row, val2);
+	Matrix_t* O = Matrix_zeroes(row, row);
+	Matrix_t* Q = Matrix_new(row+1, col+1, val1);
+
+	//Wreong size input
+	if(Matrix_multiplication(Q, N, O) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	if(Matrix_multiplication(M, Q, O) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	//wrong size output
+	if(Matrix_multiplication(M, N, Q) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	//right op
+	if(Matrix_multiplication(M, N, O) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		if(O->numbers[k] != col * val1 * val2){
+			Matrix_free(M);
+			Matrix_free(N);
+			Matrix_free(O);
+			Matrix_free(Q);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	Matrix_free(M);
+	Matrix_free(N);
+	Matrix_free(O);
+	Matrix_free(Q);
+
+	//square matrixes
+	Matrix_t* P = Matrix_new(col, col, val1);
+	Matrix_t* R = Matrix_new(col, col, val2);
+
+	if(Matrix_multiplication(P, R, P) != MATRIX_OK){
+		Matrix_free(P);
+		Matrix_free(R);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		if(O->numbers[k] != col * val1 * val2){
+			Matrix_free(P);
+			Matrix_free(R);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	if(Matrix_multiplication(P, P, P) != MATRIX_OK){
+		Matrix_free(P);
+		Matrix_free(R);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		if(O->numbers[k] != col * val1 * val1){
+			Matrix_free(P);
+			Matrix_free(R);
+			TEST_FAIL;
+			return;
+		}
+	}
+	Matrix_free(P);
+	Matrix_free(R);
+	TEST_PASS;
+	return;
 }
+
 void Test_Matrix_multiplication_recursive(){
 	INTRO
-	__TODO__
+	unsigned int row = 3;
+	unsigned int col = 4;
+	double val1 = 3.5, val2 = 5.25;
+	Matrix_t* M = Matrix_new(row, col, val1);
+	Matrix_t* N = Matrix_new(col, row, val2);
+	Matrix_t* O = Matrix_zeroes(row, row);
+	Matrix_t* Q = Matrix_new(row+1, col+1, val1);
+
+	//Wreong size input
+	if(Matrix_multiplication_recursive(Q, N, O) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	if(Matrix_multiplication_recursive(M, Q, O) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	//wrong size output
+	if(Matrix_multiplication_recursive(M, N, Q) == MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	//right op
+	if(Matrix_multiplication_recursive(M, N, O) != MATRIX_OK){
+		Matrix_free(M);
+		Matrix_free(N);
+		Matrix_free(O);
+		Matrix_free(Q);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		if(O->numbers[k] != col * val1 * val2){
+
+			Matrix_display(M);
+			Matrix_display(N);
+
+			Matrix_display(O);
+
+			Matrix_free(M);
+			Matrix_free(N);
+			Matrix_free(O);
+			Matrix_free(Q);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	Matrix_free(M);
+	Matrix_free(N);
+	Matrix_free(O);
+	Matrix_free(Q);
+
+	//square matrixes
+	Matrix_t* P = Matrix_new(col, col, val1);
+	Matrix_t* R = Matrix_new(col, col, val2);
+
+	if(Matrix_multiplication_recursive(P, R, P) != MATRIX_OK){
+		Matrix_free(P);
+		Matrix_free(R);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		if(O->numbers[k] != col * val1 * val2){
+			Matrix_free(P);
+			Matrix_free(R);
+			TEST_FAIL;
+			return;
+		}
+	}
+
+	if(Matrix_multiplication_recursive(P, P, P) != MATRIX_OK){
+		Matrix_free(P);
+		Matrix_free(R);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < O->row*O->col; ++k){
+		if(O->numbers[k] != col * val1 * val1){
+			Matrix_free(P);
+			Matrix_free(R);
+			TEST_FAIL;
+			return;
+		}
+	}
+	Matrix_free(P);
+	Matrix_free(R);
+	TEST_PASS;
+	return;
 }
+
 void Test_Matrix_dotProduct(){
 	INTRO
 	__TODO__
