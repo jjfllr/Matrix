@@ -16,6 +16,9 @@
 
 //Internal
 static int Matrix_Internal_checkDimensionsExact(Matrix_t* In_1, Matrix_t* In_2){ /*checks if In_1 and In_2 have the exact same dimensions*/
+	if(In_1 == NULLMTR || In_1 == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In_1->row != In_2->row || In_1->col != In_2->col){
 		return MATRIX_ERROR;
 	}
@@ -23,6 +26,9 @@ static int Matrix_Internal_checkDimensionsExact(Matrix_t* In_1, Matrix_t* In_2){
 }
 
 static int Matrix_Internal_checkIndex(Matrix_t* In, unsigned int row, unsigned int col){/* checks if row and col are valid indexes for matrix M */
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(row >= In->row || col >= In->col || (int)row < 0 || (int)col < 0){
 		return MATRIX_ERROR;
 	}
@@ -30,6 +36,9 @@ static int Matrix_Internal_checkIndex(Matrix_t* In, unsigned int row, unsigned i
 }
 
 static int Matrix_Internal_checkSquare(Matrix_t* In){
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In->row != In->col){
 		return MATRIX_ERROR;
 	}
@@ -37,6 +46,9 @@ static int Matrix_Internal_checkSquare(Matrix_t* In){
 }
 
 static int Matrix_Internal_checkTriangularUpper(Matrix_t* In){
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In->row == 1){
 		return MATRIX_OK;
 	}
@@ -54,13 +66,20 @@ static int Matrix_Internal_checkTriangularUpper(Matrix_t* In){
 }
 
 static int Matrix_Internal_checkAddress(Matrix_t* In_1, Matrix_t* In_2){
+
 	if(In_1 == In_2){
 		return MATRIX_SAME;
+	}
+	if(In_1 == NULLMTR || In_2 == NULLMTR){
+			return MATRIX_ERROR | MATRIX_NULL;
 	}
 	return MATRIX_DIFFERENT;
 }
 
 static int Matrix_Internal_checkTriangularLower(Matrix_t* In){
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In->row == 1){
 		return MATRIX_OK;
 	}
@@ -78,12 +97,18 @@ static int Matrix_Internal_checkTriangularLower(Matrix_t* In){
 
 /*
 static int Matrix_Internal_checkDiagonal(Matrix_t* In){
+	if(In == NULLMTR){
+	return MATRIX_ERROR | MATRIX_NULL;
+	}
 	return (CheckTriangularUpper(In) == MATRIX_OK && CheckTriangularLower(In) == MATRIX_OK) ? MATRIX_OK : MATRIX_ERROR;
 }
 */
 
 /*
 static Matrix_t* Matrix_Internal_hConcat(Matrix_t* In_1, Matrix_t* In_2){
+	if(In_1 == NULLMTR || In_2 == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	Matrix_t* Out = Matrix_new(In_1->row, In_1->col + In_2->col, 0);
 	int k = 0;
 	for(int i = 0; i < In_1->row; ++i){
@@ -144,6 +169,9 @@ static Matrix_t* Matrix_Internal_removeRow(Matrix_t* In, unsigned int row){
 
 /*
 static Matrix_t* Matrix_Internal_removeColumn(Matrix_t* In, unsigned int col){
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	Matrix_t* Out = Matrix_new(In->row-1, In->col, 0);
 	int k = 0;
 	for(int i = 0; i < In->row; ++i){
@@ -160,6 +188,9 @@ static Matrix_t* Matrix_Internal_removeColumn(Matrix_t* In, unsigned int col){
 /*
 //Matrix_Internal_transpose is defined abode Matrix_transpose
 static Matrix_t* Matrix_Internal_transpose_2(Matrix_t* In){
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	Matrix_t* Out = Matrix_new(In->col, In->row, 0);
 	int k = 0;
 	for(int i = 0; i < In->col; ++i){
@@ -189,7 +220,7 @@ Matrix_t* Matrix_new(size_t row, size_t col, double val){
 }
 
 void Matrix_free(Matrix_t* In){
-	if(In == NULL){
+	if(In == NULLMTR){
 		free((Matrix_t*) In);
 		return;
 	}
@@ -255,6 +286,9 @@ Matrix_t* Matrix_random_int(size_t row, size_t col, int from, int to){
 }
 
 int Matrix_get(Matrix_t* In, unsigned int row, unsigned int col, double *out){
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(Matrix_Internal_checkIndex(In, row, col) != MATRIX_OK){
 		return MATRIX_ERROR | MATRIX_INDEX;
 	}
@@ -263,6 +297,9 @@ int Matrix_get(Matrix_t* In, unsigned int row, unsigned int col, double *out){
 }
 
 int Matrix_set(Matrix_t* In, unsigned int row, unsigned int col, double val){
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(Matrix_Internal_checkIndex(In, row, col) != MATRIX_OK){
 			return MATRIX_ERROR | MATRIX_INDEX;
 		}
@@ -272,6 +309,9 @@ int Matrix_set(Matrix_t* In, unsigned int row, unsigned int col, double val){
 
 //Algebra
 int Matrix_scalarMultiplication(Matrix_t* In, double factor, Matrix_t* Out){
+	if(In == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(Matrix_Internal_checkDimensionsExact(In, Out)){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
@@ -282,6 +322,9 @@ int Matrix_scalarMultiplication(Matrix_t* In, double factor, Matrix_t* Out){
 }
 
 int Matrix_addition(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
+	if(In_1 == NULLMTR || In_2 == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(Matrix_Internal_checkDimensionsExact(In_1, In_2) != MATRIX_OK || Matrix_Internal_checkDimensionsExact(In_1, Out) != MATRIX_OK){
 			return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
@@ -293,6 +336,9 @@ int Matrix_addition(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
 }
 
 int Matrix_subtraction(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
+	if(In_1 == NULLMTR || In_2 == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(Matrix_Internal_checkDimensionsExact(In_1, In_2) != MATRIX_OK || Matrix_Internal_checkDimensionsExact(In_1, Out) != MATRIX_OK){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
@@ -327,6 +373,9 @@ static void Matrix_Internal_multiplication(Matrix_t* In_1, Matrix_t* In_2, Matri
 }
 
 int Matrix_multiplication(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
+	if(In_1 == NULLMTR || In_2 == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In_1->col != In_2->row || In_1->row != Out->row || In_2->col != Out->col){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
@@ -621,6 +670,9 @@ static void Matrix_Internal_multiplication_recursive(
 
 int Matrix_multiplication_recursive(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
 	// [n x m] * [m x p] = [n x q].
+	if(In_1 == NULLMTR || In_2 == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In_1->col != In_2->row || In_1->row != Out->row || In_2->col != Out->col){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
@@ -655,6 +707,9 @@ static void Matrix_Internal_transpose(Matrix_t* In, Matrix_t* Out){
 }
 
 int Matrix_transpose(Matrix_t* In, Matrix_t* Out){
+	if(In == NULLMTR || Out == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In->row != Out->col || In->col != Out->row){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
@@ -674,6 +729,9 @@ int Matrix_transpose(Matrix_t* In, Matrix_t* Out){
 }
 
 int Matrix_determinant(Matrix_t* In, double* out){
+	if( In == NULLMTR || out == (double*)0 ){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(Matrix_Internal_checkSquare(In) != MATRIX_OK){
 		return MATRIX_ERROR | MATRIX_SQUARE;
 	}
@@ -703,6 +761,9 @@ int Matrix_determinant(Matrix_t* In, double* out){
 }
 
 int Matrix_trace(Matrix_t* In, double* out){
+	if(In == NULLMTR || out == (double*)0){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(Matrix_Internal_checkSquare(In) != MATRIX_OK){
 		return MATRIX_ERROR | MATRIX_SQUARE;
 	}
@@ -736,6 +797,9 @@ static void Matrix_Internal_adjoint(Matrix_t* In, Matrix_t* Out){
 }
 
 int Matrix_adjoint(Matrix_t* In, Matrix_t* Out){
+	if(In == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if( (Matrix_Internal_checkSquare(In) != MATRIX_OK) || Matrix_Internal_checkDimensionsExact(In, Out) != MATRIX_OK || (Matrix_Internal_checkSquare(Out) != MATRIX_OK) ){
 		return MATRIX_ERROR | MATRIX_SQUARE;
 	}
@@ -769,6 +833,9 @@ static int Matrix_Internal_inverse(Matrix_t* In, Matrix_t* Out){
 }
 
 int Matrix_inverse(Matrix_t* In, Matrix_t* Out){
+	if(In == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if( (Matrix_Internal_checkSquare(In) != MATRIX_OK) || Matrix_Internal_checkDimensionsExact(In, Out) != MATRIX_OK || (Matrix_Internal_checkSquare(Out) != MATRIX_OK) ){
 		return MATRIX_ERROR | MATRIX_SQUARE;
 	}
@@ -791,6 +858,9 @@ int Matrix_inverse(Matrix_t* In, Matrix_t* Out){
 }
 
 static int Matrix_Internal_inverse_triangular_upper(Matrix_t* In, Matrix_t* Out){
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	for(unsigned int i = 0; i < Out->row; ++i){
 		//if element in diagonal is 0, then non invertible
 		if(In->numbers[i * (In->col) + i] == 0){
@@ -810,7 +880,9 @@ static int Matrix_Internal_inverse_triangular_upper(Matrix_t* In, Matrix_t* Out)
 }
 
 static int Matrix_Internal_inverse_triangular_lower(Matrix_t* In, Matrix_t* Out){
-
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	for(unsigned int i = 0; i < Out->row; ++i){
 		//if element in diagonal is 0, then non invertible
 		if(In->numbers[i * (In->col) + i] == 0){
@@ -830,7 +902,9 @@ static int Matrix_Internal_inverse_triangular_lower(Matrix_t* In, Matrix_t* Out)
 }
 
 int Matrix_inverse_triangular(Matrix_t* In, Matrix_t* Out){
-	//__TODO__ case lower triangular
+	if(In == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 
 	if( (Matrix_Internal_checkSquare(In) != MATRIX_OK) || Matrix_Internal_checkDimensionsExact(In, Out) != MATRIX_OK || (Matrix_Internal_checkSquare(Out) != MATRIX_OK) ){
 		return MATRIX_ERROR | MATRIX_SQUARE;
@@ -875,6 +949,10 @@ int Matrix_inverse_triangular(Matrix_t* In, Matrix_t* Out){
 
 // Utilities
 void Matrix_display(Matrix_t* In){
+	if(In == NULLMTR){
+		printf("NULL MATRIX\n");
+		return;
+	}
 	if(In->row > 0 && In->col > 0){
 		int k = 0;
 		printf("[");
@@ -899,6 +977,9 @@ void Matrix_display(Matrix_t* In){
 }
 
 Matrix_t* Matrix_copy(Matrix_t* In){
+	if(In == NULLMTR){
+		return NULLMTR;
+	}
 	Matrix_t* Out = Matrix_new(In->row, In->col, 0);
 	for(unsigned int k = 0; k < In->row * In->col; k++){
 		Out->numbers[k]=In->numbers[k];
@@ -907,6 +988,9 @@ Matrix_t* Matrix_copy(Matrix_t* In){
 }
 
 int Matrix_copyTo(Matrix_t* In, Matrix_t* Out){
+	if(In == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(Matrix_Internal_checkDimensionsExact(In, Out)){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
@@ -917,6 +1001,9 @@ int Matrix_copyTo(Matrix_t* In, Matrix_t* Out){
 }
 
 int Matrix_submatrix(Matrix_t* In, unsigned int upper, unsigned int lower, unsigned int left, unsigned int right, Matrix_t* Out){
+	if(In == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(lower < upper || right <  left || Matrix_Internal_checkIndex(In, lower, right) != MATRIX_OK){
 		return MATRIX_ERROR || MATRIX_INDEX;
 	}
@@ -934,6 +1021,9 @@ int Matrix_submatrix(Matrix_t* In, unsigned int upper, unsigned int lower, unsig
 }
 
 int Matrix_removeRow(Matrix_t* In, unsigned int row, Matrix_t* Out){
+	if(In == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In->row != Out->row + 1 || In->col != Out->col ){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
@@ -949,6 +1039,9 @@ int Matrix_removeRow(Matrix_t* In, unsigned int row, Matrix_t* Out){
 }
 
 int Matrix_removeColumn(Matrix_t* In, unsigned int col, Matrix_t* Out){
+	if(In == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In->row != Out->row || In->col != Out->col + 1 ){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
@@ -1099,6 +1192,9 @@ Matrix_t* Matrix_reducedRowEchelon(Matrix_t* In){
 }
 
 int Matrix_hConcat(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
+	if(In_1 == NULLMTR || In_2 == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In_1->col + In_2->col != Out->col || In_1->row != In_2->row || In_1->row != Out->row){
 		return MATRIX_ERROR || MATRIX_DIMENSIONS;
 	}
@@ -1115,6 +1211,9 @@ int Matrix_hConcat(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
 }
 
 int Matrix_vConcat(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out){
+	if(In_1 == NULLMTR || In_2 == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In_1->row + In_2->row != Out->row || In_1->col != In_2->col || In_1->col != Out->col){
 		return MATRIX_ERROR || MATRIX_DIMENSIONS;
 	}
@@ -1191,6 +1290,9 @@ Matrix_t* Matrix_nullSpace(Matrix_t* In){
 }
 
 int Matrix_descomposition_LU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_U){
+	if(In == NULLMTR || Out_L == NULLMTR || Out_U == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	//check squareness
 	if(Matrix_Internal_checkSquare(In) != MATRIX_OK || Matrix_Internal_checkDimensionsExact(In, Out_L) != MATRIX_OK || Matrix_Internal_checkDimensionsExact(In, Out_U) != MATRIX_OK){
 		return MATRIX_ERROR | MATRIX_SQUARE;
@@ -1262,6 +1364,9 @@ int Matrix_descomposition_LU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_U){
 }
 
 int Matrix_descomposition_LDU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_D, Matrix_t* Out_U){
+	if(In == NULLMTR || Out_L == NULLMTR || Out_D == NULLMTR || Out_U == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(Matrix_Internal_checkSquare(In) != MATRIX_OK ||
 			Matrix_Internal_checkDimensionsExact(In, Out_L) != MATRIX_OK ||
 			Matrix_Internal_checkDimensionsExact(In, Out_D) != MATRIX_OK ||
@@ -1293,7 +1398,6 @@ int Matrix_descomposition_LDU(Matrix_t* In, Matrix_t* Out_L, Matrix_t* Out_D, Ma
 }
 
 static void Matrix_Internal_orthogonalization(Matrix_t* In, Matrix_t* Out){
-
 	Matrix_t* In_col = Matrix_new(In->row, 1, 0);
 	Matrix_t* Out_col = Matrix_new(In->row, 1, 0);
 	Matrix_t* temp = Matrix_new(In->row, 1, 0);
@@ -1330,6 +1434,9 @@ static void Matrix_Internal_orthogonalization(Matrix_t* In, Matrix_t* Out){
 }
 
 int Matrix_orthonormalization(Matrix_t* In, Matrix_t* Out){
+	if(In == NULLMTR || Out == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(Matrix_Internal_checkDimensionsExact(In, Out)!= MATRIX_OK){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
 	}
@@ -1348,6 +1455,9 @@ int Matrix_descomposition_QR(Matrix_t* In, Matrix_t* Out_Q, Matrix_t* Out_R){
 	//In->row >= In->col
 	//Q is In->row x In->row;
 	//R is In->row x In->col;
+	if(In == NULLMTR|| Out_Q == NULLMTR|| Out_R == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In->row < In->col || Matrix_Internal_checkDimensionsExact(In, Out_Q) ||
 			Out_R->row != In->col || Out_R->col != In->col ){
 		return MATRIX_ERROR | MATRIX_DIMENSIONS;
@@ -1400,6 +1510,9 @@ int Matrix_descomposition_QR(Matrix_t* In, Matrix_t* Out_Q, Matrix_t* Out_R){
 }
 
 int Matrix_setMatrixtoZero(Matrix_t* In){
+	if(In == NULLMTR){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	for(unsigned int k = 0; k < In->row*In->col; ++k){
 		In->numbers[k] = 0;
 	}
@@ -1426,6 +1539,9 @@ int Matrix_compare(Matrix_t* In_1, Matrix_t* In_2){
 //VECTOR
 
 int Matrix_dotProduct(Matrix_t* In_1, Matrix_t* In_2, double* out){
+	if(In_1 == NULLMTR || In_2 == NULLMTR || out == (double*)0){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
 	if(In_1->col != 1 || In_2->col != 1 || In_1->row != In_2->row){
 		return MATRIX_ERROR | MATRIX_VECTOR;
 	}
@@ -1438,11 +1554,14 @@ int Matrix_dotProduct(Matrix_t* In_1, Matrix_t* In_2, double* out){
 	return MATRIX_OK;
 }
 
-int Matrix_magnitude(Matrix_t* In_1, double* out){
-	if(In_1->col != 1){
+int Matrix_magnitude(Matrix_t* In, double* out){
+	if(In == NULLMTR || out == (double*)0){
+		return MATRIX_ERROR | MATRIX_NULL;
+	}
+	if(In->col != 1){
 		return MATRIX_ERROR | MATRIX_VECTOR;
 	}
-	Matrix_dotProduct(In_1, In_1, out);
+	Matrix_dotProduct(In, In, out);
 	*out = sqrt(*out);
 	return MATRIX_OK;
 }

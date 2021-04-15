@@ -57,7 +57,7 @@ To do		: 	EigenValues
 
 	//vectors
 	int Matrix_dotProduct(Matrix_t* In_1, Matrix_t* In_2, double* out); /* Calculates the dot product between vectors In_1 and In_2; <In_1, In_2> */
-	int Matrix_magnitude(Matrix_t* In_1, double* out); /* Calculates the Magnitude of vector In_1; sqrt(<In,In>) */
+	int Matrix_magnitude(Matrix_t* In, double* out); /* Calculates the Magnitude of vector In_1; sqrt(<In,In>) */
 
 	// Utilities
 	void Matrix_display(Matrix_t* In); /* Prints the Matrix M in the console */
@@ -104,6 +104,8 @@ To do		: 	EigenValues
 	int Matrix_multiplication_forked(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Out); /*TODO: Forked Method*/
 #endif
 
+	// nullptr matrix
+#define NULLMTR (Matrix_t*)0
 	//Error Codes
 #define MATRIX_OK				0b000000000000000000000000
 
@@ -116,6 +118,7 @@ To do		: 	EigenValues
 #define MATRIX_TRIANGULAR		0b000000000000000001000000
 #define MATRIX_VECTOR			0b000000000000000010000000
 
+#define MATRIX_NULL				0b000100000000000000000000
 #define MATRIX_DIFFERENT	 	0b001000000000000000000000
 #define MATRIX_SAME				0b010000000000000000000000
 #define MATRIX_ERROR			0b100000000000000000000000
@@ -129,6 +132,7 @@ To do		: 	EigenValues
 #ifndef NULL
 #define NULL (void*)0
 #endif
+
 
 
 

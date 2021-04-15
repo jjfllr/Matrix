@@ -936,7 +936,24 @@ void Test_Matrix_descomposition_LDU(){
 }
 void Test_Matrix_setMatrixtoZero(){
 	INTRO
-	__TODO__
+	unsigned int row = 3;
+	unsigned int col = 4;
+	double val = 1.5;
+	Matrix_t* A = Matrix_new(row, col, val);
+	if(Matrix_setMatrixtoZero(A) != MATRIX_OK){
+		Matrix_free(A);
+		TEST_FAIL;
+		return;
+	}
+	for(unsigned int k = 0; k < A->row*A->col; ++k){
+		if(comparefloat(A->numbers[k], 0) != 0){
+			Matrix_free(A);
+			TEST_FAIL;
+			return;
+		}
+	}
+	TEST_PASS;
+	return;
 }
 
 
