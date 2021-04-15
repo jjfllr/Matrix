@@ -27,10 +27,6 @@ To do		: 	EigenValues
 #ifndef MATRIX_H_
 #define MATRIX_H_
 
-#ifndef NULL
-#define NULL (void*)0
-#endif
-
 	//struct definition
 
 	typedef struct Matrix_t{
@@ -128,6 +124,12 @@ To do		: 	EigenValues
 // This is the difference between 1 and the smallest floating point number of type float that is greater than 1.
 // https://frama-c.com/2013/05/09/Definition-of-FLT_EPSILON.html
 #define FLT_EPSILON 1.19209290E-07F
-#endif //MATRIX_H_
+#endif //FLT_EPSILON
 
-#endif /* SRC_UTILS_MATRIX_H_ */
+#ifndef NULL
+#define NULL (void*)0
+#endif
+
+
+
+#endif /* MATRIX_H_ */

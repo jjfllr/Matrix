@@ -69,13 +69,22 @@
 #include <stdio.h>
 #include "Matrix.h"
 
+
 #define TEST_PASS printf("PASSED\n");
 #define TEST_FAIL printf("FAILED (Line:%d)\n", __LINE__);
 #define INTRO printf("%s \t", __FUNCTION__ );
 #define __TODO__  printf("\tTo do:%s\n", __FUNCTION__);
 
 
-
+#include <math.h>
+//1 if a is more, -1 if b is more, 0 if they are FLT_EPSILON appart
+static int comparefloat(double a, double b){
+	//fabs(In->numbers[j]-0.0) <= FLT_EPSILON)
+	if(fabs(a - b) <= FLT_EPSILON){
+		return 0;
+	}
+	return (a > b) - (a < b);
+}
 
 void Test_Matrix_new(){
 	//New Matrix
@@ -362,7 +371,7 @@ void Test_Matrix_scalarMultiplication(){
 	}
 
 	for(unsigned int k = 0; k < N->row*N->col; ++k){
-		if(N->numbers[k] != val*M->numbers[k]){
+		if(comparefloat(N->numbers[k], val*M->numbers[k]) != 0){
 			Matrix_free(M);
 			Matrix_free(N);
 			Matrix_free(O);
@@ -392,7 +401,10 @@ void Test_Matrix_scalarMultiplication(){
 
 	//check if done correctly
 	for(unsigned int k = 0; k < N->row*N->col; ++k){
-		if(N->numbers[k] != val*M->numbers[k]){
+		if(comparefloat(N->numbers[k], val*M->numbers[k]) != 0){
+
+
+
 			Matrix_free(M);
 			Matrix_free(N);
 			Matrix_free(O);
@@ -454,7 +466,7 @@ void Test_Matrix_addition(){
 		return;
 	}
 	for(unsigned int k = 0; k < O->row*O->col; ++k){
-		if(O->numbers[k] != val1 + val2){
+		if(comparefloat(O->numbers[k], val1 + val2) != 0){
 			Matrix_free(M);
 			Matrix_free(N);
 			Matrix_free(O);
@@ -473,8 +485,8 @@ void Test_Matrix_addition(){
 		TEST_FAIL;
 		return;
 	}
-	for(unsigned int k = 0; k < O->row*O->col; ++k){
-		if(N->numbers[k] != val1 + val2){
+	for(unsigned int k = 0; k < N->row*N->col; ++k){
+		if(comparefloat(N->numbers[k], val1 + val2) != 0){
 			Matrix_free(M);
 			Matrix_free(N);
 			Matrix_free(O);
@@ -492,9 +504,9 @@ void Test_Matrix_addition(){
 		TEST_FAIL;
 		return;
 	}
-	for(unsigned int k = 0; k < O->row*O->col; ++k){
+	for(unsigned int k = 0; k < M->row*M->col; ++k){
 		//N is val1 + val2, M is val1
-		if(M->numbers[k] != val1 + val1 + val2){
+		if(comparefloat(M->numbers[k], val1 + val1 + val2) != 0){
 			Matrix_free(M);
 			Matrix_free(N);
 			Matrix_free(O);
@@ -558,7 +570,7 @@ void Test_Matrix_subtraction(){
 		return;
 	}
 	for(unsigned int k = 0; k < O->row*O->col; ++k){
-		if(O->numbers[k] != val1 - val2){
+		if(comparefloat(O->numbers[k], val1 - val2) != 0){
 			Matrix_free(M);
 			Matrix_free(N);
 			Matrix_free(O);
@@ -577,8 +589,8 @@ void Test_Matrix_subtraction(){
 		TEST_FAIL;
 		return;
 	}
-	for(unsigned int k = 0; k < O->row*O->col; ++k){
-		if(N->numbers[k] != val1 - val2){
+	for(unsigned int k = 0; k < N->row*N->col; ++k){
+		if(comparefloat(N->numbers[k], val1 - val2) != 0){
 			Matrix_free(M);
 			Matrix_free(N);
 			Matrix_free(O);
@@ -596,9 +608,9 @@ void Test_Matrix_subtraction(){
 		TEST_FAIL;
 		return;
 	}
-	for(unsigned int k = 0; k < O->row*O->col; ++k){
+	for(unsigned int k = 0; k < M->row*M->col; ++k){
 		//N is (val1 - val2), M is val1
-		if(M->numbers[k] != val1 - (val1 - val2)){
+		if(comparefloat(M->numbers[k], val1 - (val1 - val2)) != 0){
 			Matrix_free(M);
 			Matrix_free(N);
 			Matrix_free(O);
@@ -662,7 +674,7 @@ void Test_Matrix_multiplication(){
 		return;
 	}
 	for(unsigned int k = 0; k < O->row*O->col; ++k){
-		if(O->numbers[k] != col * val1 * val2){
+		if(comparefloat(O->numbers[k], col * val1 * val2) != 0){
 			Matrix_free(M);
 			Matrix_free(N);
 			Matrix_free(O);
@@ -681,14 +693,14 @@ void Test_Matrix_multiplication(){
 	Matrix_t* P = Matrix_new(col, col, val1);
 	Matrix_t* R = Matrix_new(col, col, val2);
 
-	if(Matrix_multiplication(P, R, P) != MATRIX_OK){
+	if(Matrix_multiplication(P, R, R) != MATRIX_OK){
 		Matrix_free(P);
 		Matrix_free(R);
 		TEST_FAIL;
 		return;
 	}
-	for(unsigned int k = 0; k < O->row*O->col; ++k){
-		if(O->numbers[k] != col * val1 * val2){
+	for(unsigned int k = 0; k < R->row*R->col; ++k){
+		if(comparefloat(R->numbers[k], col * val1 * val2) != 0){
 			Matrix_free(P);
 			Matrix_free(R);
 			TEST_FAIL;
@@ -702,8 +714,9 @@ void Test_Matrix_multiplication(){
 		TEST_FAIL;
 		return;
 	}
-	for(unsigned int k = 0; k < O->row*O->col; ++k){
-		if(O->numbers[k] != col * val1 * val1){
+	for(unsigned int k = 0; k < P->row*P->col; ++k){
+		if(comparefloat(P->numbers[k], col * val1 * val1) != 0){
+
 			Matrix_free(P);
 			Matrix_free(R);
 			TEST_FAIL;
@@ -719,7 +732,7 @@ void Test_Matrix_multiplication(){
 void Test_Matrix_multiplication_recursive(){
 	INTRO
 	unsigned int row = 3;
-	unsigned int col = 4;
+	unsigned int col = 5;
 	double val1 = 3.5, val2 = 5.25;
 	Matrix_t* M = Matrix_new(row, col, val1);
 	Matrix_t* N = Matrix_new(col, row, val2);
@@ -762,13 +775,8 @@ void Test_Matrix_multiplication_recursive(){
 		return;
 	}
 	for(unsigned int k = 0; k < O->row*O->col; ++k){
-		if(O->numbers[k] != col * val1 * val2){
-
-			Matrix_display(M);
-			Matrix_display(N);
-
+		if(comparefloat(O->numbers[k], col * val1 * val2) != 0){
 			Matrix_display(O);
-
 			Matrix_free(M);
 			Matrix_free(N);
 			Matrix_free(O);
@@ -787,14 +795,17 @@ void Test_Matrix_multiplication_recursive(){
 	Matrix_t* P = Matrix_new(col, col, val1);
 	Matrix_t* R = Matrix_new(col, col, val2);
 
-	if(Matrix_multiplication_recursive(P, R, P) != MATRIX_OK){
+	if(Matrix_multiplication_recursive(P, R, R) != MATRIX_OK){
 		Matrix_free(P);
 		Matrix_free(R);
 		TEST_FAIL;
 		return;
 	}
-	for(unsigned int k = 0; k < O->row*O->col; ++k){
-		if(O->numbers[k] != col * val1 * val2){
+
+	for(unsigned int k = 0; k < R->row*R->col; ++k){
+
+		if(comparefloat(R->numbers[k], col * val1 * val2) != 0){
+			Matrix_display(R);
 			Matrix_free(P);
 			Matrix_free(R);
 			TEST_FAIL;
@@ -808,8 +819,9 @@ void Test_Matrix_multiplication_recursive(){
 		TEST_FAIL;
 		return;
 	}
-	for(unsigned int k = 0; k < O->row*O->col; ++k){
-		if(O->numbers[k] != col * val1 * val1){
+
+	for(unsigned int k = 0; k < P->row*P->col; ++k){
+		if(comparefloat(P->numbers[k], col * val1 * val1) != 0 ){
 			Matrix_free(P);
 			Matrix_free(R);
 			TEST_FAIL;

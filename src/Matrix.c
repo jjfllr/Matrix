@@ -351,21 +351,195 @@ static void Matrix_Internal_multiplication_recursive(
 		Matrix_t* B, unsigned int b_upper, unsigned int b_lower, unsigned int b_left, unsigned int b_right,
 		Matrix_t* C){
 
-	// base cases => n = 1 (p = 1) => multiply vector
-	//		else partition
-	if(a_left == a_right || a_upper == a_lower || b_left == b_right || b_upper == b_lower){
+	//printf("A: %d %d %d %d\n", a_upper, a_lower, a_left, a_right);
+	//printf("B: %d %d %d %d\n", b_upper, b_lower, b_left, b_right);
 
-		for(unsigned int i = 0; i < (a_lower - a_upper + 1); ++i){
-			for(unsigned int j = 0; j < (b_right-b_left + 1); ++j){
-				for(unsigned int k = 0; k < (b_lower - b_upper + 1);++k){
-					C->numbers[(a_upper + i)*C->col + (b_left + j)] +=
-							A->numbers[(a_upper + i) * (A->col) + (a_right + k)] * B->numbers[(b_upper + k) * (B->col) + (b_right + j)];
-				}
-			}
-		}
+	//          1          x         1                     1          x         1
+	if( (a_upper == a_lower && a_left == a_right) && (b_upper == b_lower && b_left == b_right)){
+		C->numbers[a_upper * C->col + b_left] +=
+				A->numbers[ a_upper * A->col + a_right] * B->numbers[b_upper * B->col + b_left];
 		return;
 	}
 
+	//           1          x          n                      n         x          1
+	if( (a_upper == a_lower && a_right != a_left) && (b_upper != b_lower && b_right == b_left) ){
+		// if A = [A11 A12]  and B = [B11  then C = [A11xB11+A12xB21]
+		//	 	   			          B21]
+
+		//C11_a = A11 x B11
+		Matrix_Internal_multiplication_recursive(
+				A,	(a_upper)													, (a_lower),
+					(a_left)													, ((a_left) + (((a_right-a_left)>>1) + ((a_right-a_left)&1)) - 1),
+				B,	(b_upper)													, ((b_upper) + (((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)) - 1),
+					(b_left)													, (b_right),
+				C);
+
+		//C11_b = A12 x B21
+		Matrix_Internal_multiplication_recursive(
+				A,	(a_upper)													, (a_lower),
+					((a_left) + ((a_right-a_left)>>1) + ((a_right-a_left)&1))	, (a_right),
+				B,	((b_upper) + ((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)), (b_lower),
+					(b_left)													, (b_right),
+				C);
+		return;
+	}
+
+	//          1 x n                   n x p
+	if( (a_upper == a_lower)  && (b_right != b_left) ){
+		if(a_left == a_right){
+			// if A = [A11]  and B = [B11 B12]  then C = [A11xB11 A11xB12]
+			//
+
+			//C11 = A11 x B11
+			Matrix_Internal_multiplication_recursive(
+					A,	(a_upper)													, (a_lower),
+						(a_left)													, (a_right),
+					B,	(b_upper)													, (b_lower),
+						(b_left)													, ((b_left) + (((b_right-b_left)>>1) + ((b_right-b_left)&1)) - 1),
+					C);
+
+			//C12 = A12 x B21
+			Matrix_Internal_multiplication_recursive(
+					A,	(a_upper)													, (a_lower),
+						(a_left)													, (a_right),
+					B,	(b_upper) 													, (b_lower),
+						((b_left) + ((b_right-b_left)>>1) + ((b_right-b_left)&1))	, (b_right),
+					C);
+			return;
+		}
+		// if A = [A11 A12]  and B = [B11 B12  then C = [A11xB11+A12xB21 A11xB12+A12xB22]
+		//	 	   			          B21 B22]
+
+		//C11_a = A11 x B11
+		Matrix_Internal_multiplication_recursive(
+				A,	(a_upper)													, (a_lower),
+					(a_left)													, ((a_left) + (((a_right-a_left)>>1) + ((a_right-a_left)&1)) - 1),
+				B,	(b_upper)													, ((b_upper) + (((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)) - 1),
+					(b_left)													, ((b_left) + (((b_right-b_left)>>1) + ((b_right-b_left)&1)) - 1),
+				C);
+
+		//C11_b = A12 x B21
+		Matrix_Internal_multiplication_recursive(
+				A,	(a_upper)													, (a_lower),
+					((a_left) + ((a_right-a_left)>>1) + ((a_right-a_left)&1))	, (a_right),
+				B,	((b_upper) + ((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)), (b_lower),
+					(b_left)													, ((b_left) + (((b_right-b_left)>>1) + ((b_right-b_left)&1)) - 1),
+				C);
+
+		//C12_a = A11 x B12
+		Matrix_Internal_multiplication_recursive(
+				A,	(a_upper)													, (a_lower),
+					(a_left)													, ((a_left) + (((a_right-a_left)>>1) + ((a_right-a_left)&1)) - 1),
+				B,	(b_upper)													, ((b_upper) + (((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)) - 1),
+					((b_left) + ((b_right-b_left)>>1) + ((b_right-b_left)&1))	, (b_right),
+				C);
+
+		//C12_b = A12 x B22
+		Matrix_Internal_multiplication_recursive(
+				A,	(a_upper)													, (a_lower),
+					((a_left) + ((a_right-a_left)>>1) + ((a_right-a_left)&1))	, (a_right),
+				B,	((b_upper) + ((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)), (b_lower),
+					((b_left) + ((b_right-b_left)>>1) + ((b_right-b_left)&1))	, (b_right),
+				C);
+		return;
+	}
+
+	//          m x n                   n x 1
+	if( (a_upper != a_lower) && (b_right == b_left)){
+		if(a_left == a_right){
+			// if A = [A11  and B = [B11]  then C = [A11xB11
+			//         A21]							 A21xB11]
+
+			//C11 = A11 x B11
+			Matrix_Internal_multiplication_recursive(
+					A,	(a_upper)													, ((a_upper) + (((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)) - 1),
+						(a_left)													, (a_right),
+					B,	(b_upper)													, (b_lower),
+						(b_left)													, (b_right),
+					C);
+
+			//C21 = A21 x B11
+			Matrix_Internal_multiplication_recursive(
+					A,	((a_upper) + ((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)), (a_lower),
+						(a_left)													, (a_right),
+					B,	(b_upper)													, (b_lower),
+						(b_left)													, (b_right),
+					C);
+
+			return;
+		}
+		// if A = [A11 A12  and B = [B11  then C = [A11xB11+A12xB21
+		//	 	   A21 A22]          B21]           A21xB11+A22xB21]
+
+		//C11_a = A11 x B11
+		Matrix_Internal_multiplication_recursive(
+				A,	(a_upper)													, ((a_upper) + (((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)) - 1),
+					(a_left)													, ((a_left) + (((a_right-a_left)>>1) + ((a_right-a_left)&1)) - 1),
+				B,	(b_upper)													, ((b_upper) + (((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)) - 1),
+					(b_left)													, (b_right),
+				C);
+
+		//C11_b = A12 x B21
+		Matrix_Internal_multiplication_recursive(
+				A,	(a_upper)													, ((a_upper) + (((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)) - 1),
+					((a_left) + ((a_right-a_left)>>1) + ((a_right-a_left)&1))	, (a_right),
+				B,	((b_upper) + ((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)), (b_lower),
+					(b_left)													, (b_right),
+				C);
+
+		//C21_a = A21 x B11
+		Matrix_Internal_multiplication_recursive(
+				A,	((a_upper) + ((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)), (a_lower),
+					(a_left)													, ((a_left) + (((a_right-a_left)>>1) + ((a_right-a_left)&1)) - 1),
+				B,	(b_upper)													, ((b_upper) + (((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)) - 1),
+					(b_left)													, (b_right),
+				C);
+
+		//C21_b = A22 x B21
+		Matrix_Internal_multiplication_recursive(
+				A, 	((a_upper) + ((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)), (a_lower),
+					((a_left) + ((a_right-a_left)>>1) + ((a_right-a_left)&1))	, (a_right),
+				B,	((b_upper) + ((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)), (b_lower),
+					(b_left)													, (b_right),
+				C);
+		return;
+	}
+
+	//           n         x         1                       1         x           n
+	if((a_upper != a_lower && a_right == a_left) && (b_upper == b_lower && b_right != b_left)){
+		// if A = [A11  and B = [B11 B12]  then C = [A11xB11 A11xB12
+		//	 	   A21]                     		 A21xB11 A21xB12]
+
+		//C11 = A11 x B11
+		Matrix_Internal_multiplication_recursive(
+				A,	(a_upper)													, ((a_upper) + (((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)) - 1),
+					(a_left)													, (a_right),
+				B,	(b_upper)													, (b_lower),
+					(b_left)													, ((b_left) + (((b_right-b_left)>>1) + ((b_right-b_left)&1)) - 1),
+				C);
+		//C12 = A11 x B12
+		Matrix_Internal_multiplication_recursive(
+					A,	(a_upper)													, ((a_upper) + (((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)) - 1),
+						(a_left)													, (a_right),
+					B,	(b_upper)													, (b_lower),
+						((b_left) + ((b_right-b_left)>>1) + ((b_right-b_left)&1))	, (b_right),
+					C);
+		//C21 = A21 x B11
+		Matrix_Internal_multiplication_recursive(
+					A,	((a_upper) + ((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)), (a_lower),
+						(a_left)													, (a_right),
+					B,	(b_upper)													, (b_lower),
+						(b_left)													, ((b_left) + (((b_right-b_left)>>1) + ((b_right-b_left)&1)) - 1),
+					C);
+		//C22 = A21 x B12
+		Matrix_Internal_multiplication_recursive(
+					A, 	((a_upper) + ((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)), (a_lower),
+						(a_left)													, (a_right),
+					B,	(b_upper)													, (b_lower),
+						((b_left) + ((b_right-b_left)>>1) + ((b_right-b_left)&1))	, (b_right),
+					C);
+		return;
+	}
 
 	//INDEXES
 	/*
@@ -379,6 +553,7 @@ static void Matrix_Internal_multiplication_recursive(
 	//int index_miri = ((a_left) + ((a_right-a_left)>>1) + ((a_right-a_left)&1));
 	//int index_righ = (a_right);
 	*/
+
 	//multiply the matrixes
 
 	// if A = [A11 A12  and B = [B11 B12  then C = [A11xB11+A12xB21 A11xB12+A12xB22
@@ -391,7 +566,6 @@ static void Matrix_Internal_multiplication_recursive(
 			B,	(b_upper)													, ((b_upper) + (((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)) - 1),
 				(b_left)													, ((b_left) + (((b_right-b_left)>>1) + ((b_right-b_left)&1)) - 1),
 			C);
-
 	//C11_b = A12 x B21
 	Matrix_Internal_multiplication_recursive(
 			A,	(a_upper)													, ((a_upper) + (((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)) - 1),
@@ -399,7 +573,6 @@ static void Matrix_Internal_multiplication_recursive(
 			B,	((b_upper) + ((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)), (b_lower),
 				(b_left)													, ((b_left) + (((b_right-b_left)>>1) + ((b_right-b_left)&1)) - 1),
 			C);
-
 	//C12_a = A11 x B12
 	Matrix_Internal_multiplication_recursive(
 			A,	(a_upper)													, ((a_upper) + (((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)) - 1),
@@ -407,7 +580,6 @@ static void Matrix_Internal_multiplication_recursive(
 			B,	(b_upper)													, ((b_upper) + (((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)) - 1),
 				((b_left) + ((b_right-b_left)>>1) + ((b_right-b_left)&1))	, (b_right),
 			C);
-
 	//C12_b = A12 x B22
 	Matrix_Internal_multiplication_recursive(
 			A,	(a_upper)													, ((a_upper) + (((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)) - 1),
@@ -422,7 +594,6 @@ static void Matrix_Internal_multiplication_recursive(
 			B,	(b_upper)													, ((b_upper) + (((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)) - 1),
 				(b_left)													, ((b_left) + (((b_right-b_left)>>1) + ((b_right-b_left)&1)) - 1),
 			C);
-
 	//C21_b = A22 x B21
 	Matrix_Internal_multiplication_recursive(
 			A, 	((a_upper) + ((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)), (a_lower),
@@ -430,7 +601,6 @@ static void Matrix_Internal_multiplication_recursive(
 			B,	((b_upper) + ((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)), (b_lower),
 				(b_left)													, ((b_left) + (((b_right-b_left)>>1) + ((b_right-b_left)&1)) - 1),
 			C);
-
 	//C22_a = A21 x B12
 	Matrix_Internal_multiplication_recursive(
 			A, 	((a_upper) + ((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)), (a_lower),
@@ -438,7 +608,6 @@ static void Matrix_Internal_multiplication_recursive(
 			B,	(b_upper)													, ((b_upper) + (((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)) - 1),
 				((b_left) + ((b_right-b_left)>>1) + ((b_right-b_left)&1))	, (b_right),
 			C);
-
 	//C22_b = A22 x B22
 	Matrix_Internal_multiplication_recursive(
 			A, 	((a_upper) + ((a_lower-a_upper)>>1) + ((a_lower-a_upper)&1)), (a_lower),
@@ -446,6 +615,7 @@ static void Matrix_Internal_multiplication_recursive(
 			B,	((b_upper) + ((b_lower-b_upper)>>1) + ((b_lower-b_upper)&1)), (b_lower),
 				((b_left) + ((b_right-b_left)>>1) + ((b_right-b_left)&1))	, (b_right),
 			C);
+
 	return;
 }
 
@@ -470,7 +640,6 @@ int Matrix_multiplication_recursive(Matrix_t* In_1, Matrix_t* In_2, Matrix_t* Ou
 	Matrix_Internal_multiplication_recursive(In_1, 0, In_1->row-1, 0, In_1->col-1,
 							 	 	 	 	 In_2, 0, In_2->row-1, 0, In_2->col-1,
 											 Out);
-
 	return MATRIX_OK;
 }
 
